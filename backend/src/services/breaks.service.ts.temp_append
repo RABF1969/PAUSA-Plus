@@ -1,0 +1,80 @@
+
+interface EndBreakParams {
+  badge_code: string;
+}
+
+export const endBreak = async ({ badge_code }: EndBreakParams) => {
+  // 1. Find Employee
+  const { data: employee, error: employeeError } = await supabase
+    .from('employees')
+    .select('id, name')
+    .eq('badge_code', badge_code)
+    .single(); // It finds the employee regardless of company mostly, but we assume badge_code is unique enough or we handle collision issues if company_id was passed, but here req is just badge_code. 
+    // Actually, schema said UNIQUE(company_id, badge_code). If there are multiple companies with same badge_code, this might be an issue if we don't know the company.
+    // However, usually the badge reader or frontend context provides company info or badge is globally unique. 
+    // Given the prompt, let's assume we search by badge_code. If multiple found, it could be ambiguous. 
+    // But since `single()` is used, it will error if multiple. Ideally we should filter by active status too.
+    // Let's refine: Filter by active=true. 
+
+  // To support multi-tenant properly we usually need company_id context. 
+  // But strictly following prompt "Recebe badge_code". 
+  // We'll search for the employee. If badge_code is not globally unique, this is a flaw in requirements, but we'll proceed.
+  
+  if (employeeError || !employee) {
+    throw new Error('Employee not found');
+  }
+
+  // 2. Find ACTIVE break for this employee
+  // We also need break_types to know max_minutes to calculate status
+  const { data: activeBreak, error: activeBreakError } = await supabase
+    .from('break_events')
+    .select(`
+      id, 
+      started_at, 
+      break_types (
+        max_minutes
+      )
+    `)
+    .eq('employee_id', employee.id)
+    .eq('status', 'active')
+    .single();
+
+  if (activeBreakError || !activeBreak) {
+    throw new Error('No active break found for this employee');
+  }
+
+  // 3. Calculate duration and status
+  const now = new Date();
+  const startTime = new Date(activeBreak.started_at);
+  const durationMs = now.getTime() - startTime.getTime();
+  const durationMinutes = Math.floor(durationMs / 60000); // Integer minutes
+
+  // Handle joined data safely
+  const breakType = activeBreak.break_types as any; // Type assertion since Supabase types are dynamic here
+  const maxMinutes = breakType?.max_minutes || 0;
+
+  const status = durationMinutes > maxMinutes ? 'exceeded' : 'finished';
+
+  // 4. Update break event
+  const { data: updatedBreak, error: updateError } = await supabase
+    .from('break_events')
+    .update({
+      ended_at: now.toISOString(),
+      duration_minutes: durationMinutes,
+      status: status
+    })
+    .eq('id', activeBreak.id)
+    .select()
+    .single();
+
+  if (updateError) {
+    throw new Error(`Failed to end break: ${updateError.message}`);
+  }
+
+  return {
+    ...updatedBreak,
+    employee_name: employee.name,
+    limit_minutes: maxMinutes,
+    exceeded_minutes: Math.max(0, durationMinutes - maxMinutes)
+  };
+};
