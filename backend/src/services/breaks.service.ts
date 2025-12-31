@@ -141,3 +141,13 @@ export const endBreak = async ({ badge_code }: EndBreakParams) => {
         exceeded_minutes: Math.max(0, durationMinutes - maxMinutes)
     };
 };
+
+export const listBreakTypes = async () => {
+    const { data, error } = await supabase
+        .from('break_types')
+        .select('*')
+        .eq('active', true);
+
+    if (error) throw new Error(error.message);
+    return data;
+};

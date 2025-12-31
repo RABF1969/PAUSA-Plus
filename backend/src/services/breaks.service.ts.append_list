@@ -1,0 +1,9 @@
+export const listBreakTypes = async () => {
+  const { data, error } = await supabase
+    .from('break_types')
+    .select('*')
+    .eq('active', true);
+
+  if (error) throw new Error(error.message);
+  return data;
+};

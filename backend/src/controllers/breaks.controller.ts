@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { startBreak, endBreak } from '../services/breaks.service';
+import { startBreak, endBreak, listBreakTypes } from '../services/breaks.service';
 
 export const startBreakController = async (req: Request, res: Response) => {
     try {
@@ -27,6 +27,15 @@ export const endBreakController = async (req: Request, res: Response) => {
 
         const result = await endBreak({ badge_code });
 
+        return res.status(200).json(result);
+    } catch (error: any) {
+        return res.status(400).json({ error: error.message });
+    }
+};
+
+export const listBreakTypesController = async (req: Request, res: Response) => {
+    try {
+        const result = await listBreakTypes();
         return res.status(200).json(result);
     } catch (error: any) {
         return res.status(400).json({ error: error.message });
