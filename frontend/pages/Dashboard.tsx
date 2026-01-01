@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDashboardOverview, getActiveBreaks, DashboardOverview, ActiveBreak } from '../services/api';
+import { getDashboardOverview, getActiveBreaks, endBreak, DashboardOverview, ActiveBreak } from '../services/api';
 
 const Dashboard: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -15,7 +15,7 @@ const Dashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      setLoading(true);
+      if (!overview) setLoading(true);
       setError('');
       const [overviewData, breaksData] = await Promise.all([
         getDashboardOverview(),
@@ -28,6 +28,17 @@ const Dashboard: React.FC = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEndBreak = async (breakId: string) => {
+    if (!window.confirm('Deseja realmente encerrar esta pausa manualmente?')) return;
+
+    try {
+      await endBreak({ break_id: breakId });
+      await fetchDashboardData();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Erro ao encerrar pausa');
     }
   };
 
@@ -222,7 +233,16 @@ const Dashboard: React.FC = () => {
                         </div>
                         <div>
                           <p className="text-sm font-bold text-gray-900 leading-tight">{breakItem.employee_name}</p>
-                          <p className="text-xs text-gray-500 capitalize">{breakItem.employee_role}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-gray-500 capitalize">{breakItem.employee_role}</p>
+                            <span className="text-gray-300">•</span>
+                            <button
+                              onClick={() => handleEndBreak(breakItem.id)}
+                              className="text-[10px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-widest"
+                            >
+                              Finalizar
+                            </button>
+                          </div>
                         </div>
                       </div>
                       {breakItem.status === 'alert' && (

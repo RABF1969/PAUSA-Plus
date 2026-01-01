@@ -149,13 +149,21 @@ const TabletTimer: React.FC = () => {
           <button
             onClick={handleEndBreak}
             disabled={loading}
-            className={`w-full max-w-md h-20 rounded-3xl text-2xl font-black shadow-2xl transition-all flex items-center justify-center gap-4 ${loading
+            className={`w-full max-w-md h-20 rounded-3xl text-2xl font-black shadow-2xl transition-all flex items-center justify-center gap-4 mb-4 ${loading
               ? 'bg-gray-400 text-white cursor-not-allowed'
               : 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600 active:scale-95'
               }`}
           >
             {loading ? 'ENCERRANDO...' : 'ENCERRAR PAUSA'}
             <span className="material-symbols-outlined text-4xl">check_circle</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/kiosk/scan')}
+            className="w-full max-w-md h-16 rounded-2xl border-2 border-gray-100 text-gray-400 font-black text-sm uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined">group_add</span>
+            PRÓXIMO COLABORADOR
           </button>
         </div>
       </main>

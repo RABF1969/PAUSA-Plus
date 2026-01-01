@@ -10,10 +10,6 @@ export const getOverviewStats = async (companyId: string) => {
 
     const totalSlots = breakTypes?.length || 0;
 
-    if (process.env.NODE_ENV !== 'production') {
-        console.log(`[DEBUG] getOverviewStats: totalSlots=${totalSlots} for company=${companyId}`);
-    }
-
     const { data: activeBreaks, error: activePausesError } = await supabase
         .from('break_events')
         .select(`

@@ -13,29 +13,6 @@ export const startBreak = async ({ badge_code, break_type_id }: StartBreakParams
         .eq('id', break_type_id)
         .single();
 
-    if (process.env.NODE_ENV !== 'production') {
-        if (breakTypeError) console.error(`[DEBUG] Database error finding break_type:`, breakTypeError);
-        if (breakType) console.log(`[DEBUG] Break type used:`, { id: breakType.id, company_id: breakType.company_id, name: breakType.name });
-        else console.warn(`[DEBUG] No break type found for ID: "${break_type_id}"`);
-    }
-
-    if (breakTypeError || !breakType) {
-        throw new Error(`Break type not found (ID: ${break_type_id})`);
-    }
-
-    // 1.1 Capacity Check... (existing)
-
-    // Global check for debugging only
-    if (process.env.NODE_ENV !== 'production') {
-        const { count: globalActive } = await supabase.from('break_events').select('id', { count: 'exact', head: true }).eq('status', 'active');
-        console.log(`[DEBUG] GLOBAL active breaks in DB before insert: ${globalActive || 0}`);
-    }
-
-    // 2. Find Employee by badge_code AND company_id
-    if (process.env.NODE_ENV !== 'production') {
-        console.log(`[DEBUG] Looking for employee with badge: "${badge_code}" in company: "${breakType.company_id}"`);
-    }
-
     const { data: employee, error: employeeError } = await supabase
         .from('employees')
         .select('id, name, active, company_id')
@@ -113,41 +90,53 @@ export const startBreak = async ({ badge_code, break_type_id }: StartBreakParams
 interface EndBreakParams {
     badge_code?: string;
     break_id?: string;
+    company_id?: string;
 }
 
-export const endBreak = async ({ badge_code, break_id }: EndBreakParams) => {
+export const endBreak = async ({ badge_code, break_id, company_id }: EndBreakParams) => {
     let activeBreak: any;
 
     if (break_id) {
         // 1a. Find break by ID directly
-        const { data, error } = await supabase
+        const query = supabase
             .from('break_events')
             .select(`
                 id, 
                 started_at, 
                 employee_id,
-                employees (
-                    name
+                employees!inner (
+                    name,
+                    company_id
                 ),
                 break_types (
                     max_minutes
                 )
             `)
             .eq('id', break_id)
-            .eq('status', 'active')
-            .single();
+            .eq('status', 'active');
+
+        if (company_id) {
+            query.eq('employees.company_id', company_id);
+        }
+
+        const { data, error } = await query.single();
 
         if (error || !data) {
-            throw new Error('Active break not found with the provided ID');
+            throw new Error('Active break not found');
         }
         activeBreak = data;
     } else if (badge_code) {
         // 1b. Legacy behavior: Find Employee then find their active break
-        const { data: employee, error: employeeError } = await supabase
+        const empQuery = supabase
             .from('employees')
             .select('id, name')
-            .eq('badge_code', badge_code)
-            .single();
+            .eq('badge_code', badge_code);
+
+        if (company_id) {
+            empQuery.eq('company_id', company_id);
+        }
+
+        const { data: employee, error: employeeError } = await empQuery.single();
 
         if (employeeError || !employee) {
             throw new Error('Employee not found');
@@ -216,14 +205,17 @@ export const endBreak = async ({ badge_code, break_id }: EndBreakParams) => {
     };
 };
 
-export const listBreakTypes = async (companyId?: string) => {
+export const listBreakTypes = async (companyId: string, includeInactive: boolean = false) => {
     let query = supabase
         .from('break_types')
         .select(`
             *,
             active_events:break_events(id, status)
-        `)
-        .eq('active', true);
+        `);
+
+    if (!includeInactive) {
+        query = query.eq('active', true);
+    }
 
     if (companyId) {
         query = query.eq('company_id', companyId);
@@ -237,6 +229,93 @@ export const listBreakTypes = async (companyId?: string) => {
     return (data || []).map((type: any) => ({
         ...type,
         active_count: type.active_events?.filter((e: any) => e.status === 'active').length || 0,
-        capacity: type.capacity ?? 1 // Nullish coalescing for missing column
-    }));
+        capacity: type.capacity ?? 1
+    })).sort((a, b) => a.name.localeCompare(b.name));
+};
+
+export const createBreakType = async (params: { company_id: string; name: string; max_minutes: number; capacity: number }) => {
+    if (params.max_minutes < 1) throw new Error('O tempo máximo deve ser pelo menos 1 minuto');
+    if (params.capacity < 1) throw new Error('A capacidade deve ser pelo menos 1');
+
+    const { data, error } = await supabase
+        .from('break_types')
+        .insert({
+            company_id: params.company_id,
+            name: params.name,
+            max_minutes: params.max_minutes,
+            capacity: params.capacity,
+            active: true
+        })
+        .select()
+        .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+};
+
+export const updateBreakType = async (id: string, company_id: string, updates: { name?: string; max_minutes?: number; capacity?: number; active?: boolean }) => {
+    if (updates.max_minutes !== undefined && updates.max_minutes < 1) throw new Error('O tempo máximo deve ser pelo menos 1 minuto');
+    if (updates.capacity !== undefined && updates.capacity < 1) throw new Error('A capacidade deve ser pelo menos 1');
+
+    // Business Rule: Check if trying to inactivate while having active breaks
+    if (updates.active === false) {
+        const { count, error: countError } = await supabase
+            .from('break_events')
+            .select('id', { count: 'exact', head: true })
+            .eq('break_type_id', id)
+            .eq('status', 'active');
+
+        if (countError) throw new Error(countError.message);
+        if (count && count > 0) {
+            const error: any = new Error('Não é possível inativar um tipo de pausa que possui colaboradores em pausa no momento');
+            error.status = 409;
+            throw error;
+        }
+    }
+
+    const { data, error } = await supabase
+        .from('break_types')
+        .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('company_id', company_id)
+        .select()
+        .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+};
+
+export const getActiveBreakByBadge = async (badge_code: string, company_id: string) => {
+    // 1. Find employee in the company
+    const { data: employee, error: empError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('badge_code', badge_code)
+        .eq('company_id', company_id)
+        .single();
+
+    if (empError || !employee) return null;
+
+    // 2. Find active break
+    const { data: activeBreak, error: breakError } = await supabase
+        .from('break_events')
+        .select(`
+            id,
+            started_at,
+            break_type_id,
+            break_types (
+                name,
+                max_minutes
+            )
+        `)
+        .eq('employee_id', employee.id)
+        .eq('status', 'active')
+        .single();
+
+    if (breakError || !activeBreak) return null;
+
+    return activeBreak;
 };

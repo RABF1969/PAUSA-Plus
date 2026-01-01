@@ -55,8 +55,20 @@ export interface BreakType {
     created_at: string;
 }
 
-export const listBreakTypes = async (): Promise<BreakType[]> => {
-    const response = await api.get<BreakType[]>('/breaks/types');
+export const listBreakTypes = async (includeInactive: boolean = false): Promise<BreakType[]> => {
+    const response = await api.get<BreakType[]>('/breaks/types', {
+        params: { include_inactive: includeInactive }
+    });
+    return response.data;
+};
+
+export const createBreakType = async (data: { name: string; max_minutes: number; capacity: number }): Promise<BreakType> => {
+    const response = await api.post<BreakType>('/breaks/types', data);
+    return response.data;
+};
+
+export const updateBreakType = async (id: string, data: Partial<BreakType>): Promise<BreakType> => {
+    const response = await api.put<BreakType>(`/breaks/types/${id}`, data);
     return response.data;
 };
 
@@ -162,6 +174,11 @@ export interface ActiveBreak {
 
 export const getActiveBreaks = async (): Promise<ActiveBreak[]> => {
     const response = await api.get<ActiveBreak[]>('/dashboard/active');
+    return response.data;
+};
+
+export const getActiveBreakByBadge = async (badge_code: string): Promise<any> => {
+    const response = await api.get('/breaks/active', { params: { badge_code } });
     return response.data;
 };
 

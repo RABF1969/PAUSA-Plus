@@ -1,224 +1,253 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { listBreakTypes, startBreak, BreakType } from '../services/api';
+import { listBreakTypes, startBreak, endBreak, getActiveBreakByBadge, BreakType } from '../services/api';
 
 const TabletScan: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const badgeCodeFromLogin = (location.state as any)?.badgeCode;
 
-  const [isScanning, setIsScanning] = useState(!badgeCodeFromLogin);
   const [breakTypes, setBreakTypes] = useState<BreakType[]>([]);
   const [selectedBreakType, setSelectedBreakType] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [confirmation, setConfirmation] = useState<{
+    type: 'start' | 'end';
+    name: string;
+    duration?: number;
+    maxMinutes?: number;
+  } | null>(null);
 
-  const [testBadgeCode, setTestBadgeCode] = useState('');
-  const [isTestMode] = useState(() => {
-    const meta = import.meta as any;
-    return meta.env.DEV && meta.env.VITE_KIOSK_TEST_MODE === 'true';
-  });
+  const isProcessingRef = useRef(false);
+
+  // Load break types on mount and every 30 seconds
+  const loadBreakTypes = async () => {
+    try {
+      const types = await listBreakTypes();
+      setBreakTypes(types);
+      if (types.length > 0 && !selectedBreakType) {
+        const firstAvailable = types.find(t => t.active_count < t.capacity) || types[0];
+        setSelectedBreakType(firstAvailable.id);
+      }
+    } catch (err: any) {
+      setError('Erro ao carregar configurações');
+    }
+  };
 
   useEffect(() => {
-    // Load break types on mount
-    const loadBreakTypes = async () => {
-      try {
-        const types = await listBreakTypes();
-        setBreakTypes(types);
-
-        // Robust selection:
-        // 1. Check if current selectedBreakType is still valid in the new list
-        // 2. If not, pick the first one that is NOT full
-        // 3. Fallback to the first one available
-        if (types.length > 0) {
-          const isValid = types.some(t => t.id === selectedBreakType);
-          if (!isValid) {
-            const firstAvailable = types.find(t => t.active_count < t.capacity) || types[0];
-            setSelectedBreakType(firstAvailable.id);
-          }
-        } else {
-          setSelectedBreakType('');
-        }
-      } catch (err: any) {
-        setError('Erro ao carregar tipos de pausa');
-        console.error(err);
-      }
-    };
     loadBreakTypes();
+    const interval = setInterval(loadBreakTypes, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const handleStartBreak = async (customBadgeCode?: string) => {
+  // Handle Auto-start simulation (if coming from Login)
+  useEffect(() => {
+    if (badgeCodeFromLogin && selectedBreakType && !loading && !confirmation && !error) {
+      const timer = setTimeout(() => {
+        handleToggleAction(badgeCodeFromLogin);
+      }, 2000); // Wait 2s before auto-triggering
+      return () => clearTimeout(timer);
+    }
+  }, [badgeCodeFromLogin, selectedBreakType]);
+
+  // Handle Auto-reset after 3s
+  useEffect(() => {
+    if (confirmation || error) {
+      const timer = setTimeout(() => {
+        setConfirmation(null);
+        setError('');
+        // Clean navigation state if we came from login to allow fresh scans
+        if (badgeCodeFromLogin) {
+          navigate('/kiosk/scan', { replace: true, state: {} });
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [confirmation, error]);
+
+  const handleToggleAction = async (badge_code: string) => {
+    if (isProcessingRef.current) return;
     if (!selectedBreakType) {
       setError('Selecione um tipo de pausa');
       return;
     }
 
+    isProcessingRef.current = true;
     setLoading(true);
     setError('');
 
-    // Dev Log
-    if ((import.meta as any).env.DEV) {
-      console.log(`[KIOSK] Starting break with:`, {
-        badge_code: customBadgeCode || badgeCodeFromLogin || '1001',
-        break_type_id: selectedBreakType
-      });
-    }
-
     try {
-      // Use custom badge code if provided (manual test), 
-      // otherwise use badge code from login, otherwise fallback
-      const badge_code = customBadgeCode || badgeCodeFromLogin || '1001';
+      // Step A: Check Active Break
+      const activeBreak = await getActiveBreakByBadge(badge_code);
 
-      const result = await startBreak(badge_code, selectedBreakType);
-
-      // Navigate to timer with break data
-      navigate('/kiosk/active', {
-        state: {
-          breakData: result,
-          badgeCode: badge_code
-        }
-      });
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || 'Erro ao iniciar pausa';
-      setError(errorMsg);
-
-      // Dev Log for failure
-      if ((import.meta as any).env.DEV) {
-        console.error(`[KIOSK_ERROR] Failed to start break. 
-          ID sent: "${selectedBreakType}"
-          Server Error: "${errorMsg}"`);
+      if (activeBreak) {
+        // Step B: End Break
+        const result = await endBreak({ break_id: activeBreak.id });
+        setConfirmation({
+          type: 'end',
+          name: result.employee_name,
+          duration: result.duration_minutes
+        });
+      } else {
+        // Step C: Start Break
+        const result = await startBreak(badge_code, selectedBreakType);
+        setConfirmation({
+          type: 'start',
+          name: result.employee_name,
+          maxMinutes: result.max_minutes
+        });
       }
-
-      setIsScanning(false);
+    } catch (err: any) {
+      const msg = err.response?.data?.error || 'Erro na operação';
+      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    } finally {
       setLoading(false);
+      isProcessingRef.current = false;
+      setTestBadgeCode(''); // Clear test field
     }
   };
 
-  const handleTestScan = (e: React.FormEvent) => {
+  const [testBadgeCode, setTestBadgeCode] = useState('');
+  const [isTestMode] = useState(() => {
+    try {
+      return !!((import.meta as any).env?.DEV && (import.meta as any).env?.VITE_KIOSK_TEST_MODE === 'true');
+    } catch {
+      return false;
+    }
+  });
+
+  const handleManualScan = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validation: Only numbers
-    if (!/^\d+$/.test(testBadgeCode)) {
-      setError('Matrícula de teste deve conter apenas números');
-      return;
-    }
-
-    // Standardize to 4 digits
-    const standardizedCode = testBadgeCode.padStart(4, '0');
-
-    if ((import.meta as any).env.DEV && isTestMode) {
-      console.log(`[TEST MODE] Simulating scan for badge: ${standardizedCode}`);
-    }
-
-    handleStartBreak(standardizedCode);
+    if (!testBadgeCode) return;
+    handleToggleAction(testBadgeCode.padStart(4, '0'));
   };
 
   return (
-    <div className="min-h-screen bg-[#111815] flex flex-col items-center justify-center p-8 text-white">
+    <div className="min-h-screen bg-[#0a0f0d] flex flex-col items-center justify-center p-8 text-white font-sans overflow-hidden">
       <div className="max-w-xl w-full text-center space-y-12">
-        <div className="space-y-4">
-          <h1 className="text-4xl font-black tracking-tight">Aproxime o QR Code</h1>
-          <p className="text-emerald-400 font-bold uppercase tracking-[0.2em] text-sm">Escaneando Placa Operacional</p>
+        <header className="space-y-4">
+          <h1 className="text-4xl font-black tracking-tighter leading-none">ESCANEIE O QR CODE</h1>
+          <p className="text-emerald-500 font-bold uppercase tracking-[0.3em] text-[10px]">Modo Tablet Compartilhado</p>
+        </header>
+
+        {/* Break Selection */}
+        <div className="max-w-xs mx-auto w-full space-y-3">
+          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Selecione o tipo de pausa</label>
+          <select
+            value={selectedBreakType}
+            onChange={(e) => setSelectedBreakType(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold appearance-none transition-all focus:border-emerald-500/50 outline-none"
+            disabled={loading}
+          >
+            {breakTypes.map(t => (
+              <option key={t.id} value={t.id} className="bg-gray-900" disabled={t.active_count >= t.capacity}>
+                {t.name} ({t.active_count}/{t.capacity}) — {t.max_minutes}m
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Break Type Selector */}
-        {breakTypes.length > 0 && (
-          <div className="space-y-3">
-            <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest">Tipo de Pausa</label>
-            <select
-              value={selectedBreakType}
-              onChange={(e) => setSelectedBreakType(e.target.value)}
-              className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white font-bold focus:outline-none focus:border-emerald-500"
-              disabled={loading}
-            >
-              {breakTypes.map((type) => {
-                const isFull = type.active_count >= type.capacity;
-                return (
-                  <option key={type.id} value={type.id} className="bg-gray-900" disabled={isFull}>
-                    {type.name} ({type.active_count}/{type.capacity} ocupado) — {type.max_minutes} min
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-        )}
+        {/* Viewfinder */}
+        <div className="relative size-72 mx-auto">
+          <div className="absolute inset-0 border-[3px] border-emerald-500/10 rounded-[56px]"></div>
+          {/* Corners */}
+          <div className="absolute -top-1 -left-1 size-20 border-t-[10px] border-l-[10px] border-emerald-500 rounded-tl-[56px]"></div>
+          <div className="absolute -top-1 -right-1 size-20 border-t-[10px] border-r-[10px] border-emerald-500 rounded-tr-[56px]"></div>
+          <div className="absolute -bottom-1 -left-1 size-20 border-b-[10px] border-l-[10px] border-emerald-500 rounded-bl-[56px]"></div>
+          <div className="absolute -bottom-1 -right-1 size-20 border-b-[10px] border-r-[10px] border-emerald-500 rounded-br-[56px]"></div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-500/20 border border-red-500 rounded-2xl p-4">
-            <p className="text-red-300 font-bold">{error}</p>
-          </div>
-        )}
-
-        {/* Test Mode Simulation UI */}
-        {isTestMode && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-[32px] p-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="flex items-center gap-3 justify-center text-emerald-400">
-              <span className="material-symbols-outlined">biotech</span>
-              <span className="text-xs font-black uppercase tracking-[0.2em]">Modo de Teste Ativo</span>
-            </div>
-
-            <form onSubmit={handleTestScan} className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Matrícula (ex: 1)"
-                value={testBadgeCode}
-                onChange={(e) => setTestBadgeCode(e.target.value)}
-                className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
-                disabled={loading}
-              />
-              <button
-                type="submit"
-                disabled={loading || !testBadgeCode || (breakTypes.find(t => t.id === selectedBreakType)?.active_count ?? 0) >= (breakTypes.find(t => t.id === selectedBreakType)?.capacity ?? 1)}
-                className="bg-emerald-500 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50"
-              >
-                {(breakTypes.find(t => t.id === selectedBreakType)?.active_count ?? 0) >= (breakTypes.find(t => t.id === selectedBreakType)?.capacity ?? 1) ? 'Lotado' : 'Simular'}
-              </button>
-            </form>
-            <p className="text-[10px] text-gray-500 font-medium">As matrículas serão completadas com zeros à esquerda automaticamente.</p>
-          </div>
-        )}
-
-        {/* Scanner Viewfinder */}
-        <div className="relative w-full aspect-square max-w-[400px] mx-auto">
-          <div className="absolute inset-0 border-[4px] border-emerald-500/20 rounded-[40px]"></div>
-
-          {/* Corner Markers */}
-          <div className="absolute top-0 left-0 size-20 border-t-8 border-l-8 border-emerald-500 rounded-tl-[40px]"></div>
-          <div className="absolute top-0 right-0 size-20 border-t-8 border-r-8 border-emerald-500 rounded-tr-[40px]"></div>
-          <div className="absolute bottom-0 left-0 size-20 border-b-8 border-l-8 border-emerald-500 rounded-bl-[40px]"></div>
-          <div className="absolute bottom-0 right-0 size-20 border-b-8 border-r-8 border-emerald-500 rounded-br-[40px]"></div>
-
-          <div className="absolute inset-8 bg-emerald-500/5 rounded-3xl overflow-hidden flex items-center justify-center border border-white/5">
-            <span className="material-symbols-outlined text-[100px] opacity-20">qr_code_2</span>
-            {/* Animated Line */}
-            {(isScanning || loading) && (
-              <div className="absolute left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_20px_emerald-400] scanner-line"></div>
-            )}
+          <div className="absolute inset-8 flex items-center justify-center opacity-10">
+            <span className="material-symbols-outlined text-[100px]">qr_code_scanner</span>
           </div>
 
-          {(isScanning || loading) && (
-            <div className="absolute -bottom-16 left-0 right-0 flex justify-center">
-              <div className="flex items-center gap-3 px-6 py-3 bg-white/10 rounded-2xl backdrop-blur-md border border-white/10">
-                <div className="size-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span className="text-xs font-black uppercase tracking-widest">
-                  {loading ? 'Iniciando pausa...' : 'Buscando Sinal...'}
-                </span>
-              </div>
-            </div>
+          {!confirmation && !error && (
+            <div className={`absolute w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_20px_emerald-500] scanner-line ${loading ? 'opacity-100' : 'opacity-40'}`}></div>
           )}
         </div>
 
-        <div className="pt-20">
-          <button
-            onClick={() => navigate('/kiosk/login')}
-            className="text-gray-500 hover:text-white transition-colors font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 mx-auto"
-            disabled={loading}
-          >
-            <span className="material-symbols-outlined">close</span> Cancelar Operação
-          </button>
+        {/* Scanning Indicator */}
+        <div className="flex justify-center h-8">
+          {loading ? (
+            <div className="flex items-center gap-3 px-6 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+              <div className="size-1.5 bg-emerald-500 rounded-full animate-ping"></div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Processando...</span>
+            </div>
+          ) : (
+            <p className="text-gray-600 text-[10px] font-bold uppercase tracking-widest animate-pulse">Aguardando leitura...</p>
+          )}
         </div>
+
+        {/* Test UI */}
+        {isTestMode && (
+          <form onSubmit={handleManualScan} className="max-w-xs mx-auto w-full flex gap-2">
+            <input
+              type="text"
+              placeholder="Digite a matrícula"
+              value={testBadgeCode}
+              onChange={(e) => setTestBadgeCode(e.target.value)}
+              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs focus:border-emerald-500/50 outline-none"
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              disabled={loading || !testBadgeCode}
+              className="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-20 text-white px-5 rounded-xl text-[10px] font-black uppercase tracking-widest"
+            >
+              Simular
+            </button>
+          </form>
+        )}
+
+        <button
+          onClick={() => navigate('/kiosk/login')}
+          className="text-gray-500 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 mx-auto pt-8"
+        >
+          <span className="material-symbols-outlined text-sm">close</span> Sair do Sistema
+        </button>
       </div>
+
+      {/* Confirmation Overlay */}
+      {confirmation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0f0d]/95 backdrop-blur-3xl animate-in fade-in duration-300">
+          <div className="text-center space-y-10 animate-in zoom-in duration-500 max-w-sm px-6">
+            <div className={`mx-auto size-32 rounded-full flex items-center justify-center ${confirmation.type === 'start' ? 'bg-emerald-500 shadow-[0_0_50px_rgba(16,185,129,0.4)]' : 'bg-orange-500 shadow-[0_0_50px_rgba(249,115,22,0.4)]'}`}>
+              <span className="material-symbols-outlined text-6xl text-white">
+                {confirmation.type === 'start' ? 'play_arrow' : 'stop'}
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className={`text-6xl font-black tracking-tighter ${confirmation.type === 'start' ? 'text-emerald-400' : 'text-orange-400'}`}>
+                {confirmation.type === 'start' ? 'BOM DESCANSO!' : 'BOM TRABALHO!'}
+              </h2>
+              <div className="bg-white/5 p-6 rounded-[32px] border border-white/5">
+                <p className="text-2xl font-black text-white mb-1 uppercase tracking-tight">{confirmation.name}</p>
+                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
+                  {confirmation.type === 'start' ? `Limite: ${confirmation.maxMinutes} min` : `Duração: ${confirmation.duration} min`}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-gray-600 text-[10px] font-black uppercase tracking-[0.3em]">Retornando em 3s...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error Overlay */}
+      {error && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-red-950/95 backdrop-blur-3xl animate-in fade-in duration-300">
+          <div className="text-center space-y-8 animate-in bounce-in duration-500 max-w-sm px-6">
+            <div className="mx-auto size-24 rounded-full bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] flex items-center justify-center">
+              <span className="material-symbols-outlined text-5xl text-white">error</span>
+            </div>
+            <div className="space-y-4">
+              <h2 className="text-4xl font-black text-red-400 uppercase tracking-tighter">ERRO!</h2>
+              <p className="text-white text-lg font-bold leading-tight">{error}</p>
+            </div>
+            <p className="text-red-500/50 text-[10px] font-black uppercase tracking-[0.3em]">Reiniciando Scanner...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
