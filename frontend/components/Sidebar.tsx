@@ -1,10 +1,21 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { logout } from '../services/api';
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
-  
+  const navigate = useNavigate();
+
+  // Get real user data from localStorage
+  const userJson = localStorage.getItem('user');
+  const user = userJson ? JSON.parse(userJson) : { name: 'Usuário', role: 'Acesso' };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const menuItems = [
     { path: '/', icon: 'dashboard', label: 'Dashboard' },
     { path: '/employees', icon: 'groups', label: 'Funcionários' },
@@ -31,11 +42,10 @@ const Sidebar: React.FC = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                isActive 
-                  ? 'bg-emerald-50 text-emerald-700 font-bold border-l-4 border-emerald-500' 
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-              }`}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
+                ? 'bg-emerald-50 text-emerald-700 font-bold border-l-4 border-emerald-500'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                }`}
             >
               <span className={`material-symbols-outlined ${isActive ? 'filled' : ''}`}>
                 {item.icon}
@@ -48,16 +58,19 @@ const Sidebar: React.FC = () => {
 
       <div className="mt-auto pt-6 border-t border-gray-100">
         <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-2xl">
-          <img 
-            src="https://picsum.photos/seed/admin/100" 
+          <img
+            src="https://picsum.photos/seed/admin/100"
             className="size-10 rounded-full border-2 border-white shadow-sm"
             alt="User"
           />
           <div className="min-w-0">
-            <p className="text-xs font-bold truncate">Marcos Silva</p>
-            <p className="text-[10px] text-gray-500 truncate uppercase">Gerente RH</p>
+            <p className="text-xs font-bold truncate">{user.name}</p>
+            <p className="text-[10px] text-gray-500 truncate uppercase">{user.role}</p>
           </div>
-          <button className="ml-auto text-gray-400 hover:text-red-500 transition-colors">
+          <button
+            onClick={handleLogout}
+            className="ml-auto text-gray-400 hover:text-red-500 transition-colors"
+          >
             <span className="material-symbols-outlined text-lg">logout</span>
           </button>
         </div>

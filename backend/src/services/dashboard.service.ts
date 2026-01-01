@@ -1,10 +1,11 @@
 import { supabase } from '../lib/supabase';
 
-export const getOverviewStats = async () => {
+export const getOverviewStats = async (companyId: string) => {
     // Get total break types (capacity)
     const { data: breakTypes, error: breakTypesError } = await supabase
         .from('break_types')
         .select('id')
+        .eq('company_id', companyId)
         .eq('active', true);
 
     if (breakTypesError) throw new Error(breakTypesError.message);
@@ -12,10 +13,16 @@ export const getOverviewStats = async () => {
     const totalSlots = breakTypes?.length || 0;
 
     // Get active breaks count
+    // We need to filter break_events by company_id, but the table doesn't have it directly.
+    // We can join with employees or break_types.
     const { data: activeBreaks, error: activeBreaksError } = await supabase
         .from('break_events')
-        .select('id')
-        .eq('status', 'active');
+        .select(`
+      id,
+      employees!inner(company_id)
+    `)
+        .eq('status', 'active')
+        .eq('employees.company_id', companyId);
 
     if (activeBreaksError) throw new Error(activeBreaksError.message);
 
@@ -28,8 +35,12 @@ export const getOverviewStats = async () => {
 
     const { data: completedToday, error: completedError } = await supabase
         .from('break_events')
-        .select('duration_minutes')
+        .select(`
+      duration_minutes,
+      employees!inner(company_id)
+    `)
         .in('status', ['finished', 'exceeded'])
+        .eq('employees.company_id', companyId)
         .gte('created_at', today.toISOString());
 
     if (completedError) throw new Error(completedError.message);
@@ -43,8 +54,12 @@ export const getOverviewStats = async () => {
     // Calculate efficiency (breaks within limit / total breaks today)
     const { data: allToday, error: allTodayError } = await supabase
         .from('break_events')
-        .select('status')
+        .select(`
+      status,
+      employees!inner(company_id)
+    `)
         .in('status', ['finished', 'exceeded'])
+        .eq('employees.company_id', companyId)
         .gte('created_at', today.toISOString());
 
     if (allTodayError) throw new Error(allTodayError.message);
@@ -64,15 +79,16 @@ export const getOverviewStats = async () => {
     };
 };
 
-export const getActiveBreaks = async () => {
+export const getActiveBreaks = async (companyId: string) => {
     const { data, error } = await supabase
         .from('break_events')
         .select(`
       id,
       started_at,
-      employees (
+      employees!inner(
         name,
-        role
+        role,
+        company_id
       ),
       break_types (
         name,
@@ -80,6 +96,7 @@ export const getActiveBreaks = async () => {
       )
     `)
         .eq('status', 'active')
+        .eq('employees.company_id', companyId)
         .order('started_at', { ascending: false });
 
     if (error) throw new Error(error.message);

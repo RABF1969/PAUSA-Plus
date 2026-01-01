@@ -1,4 +1,5 @@
 import { supabase } from './lib/supabase';
+import { hashPassword } from './services/auth.service';
 
 const seed = async () => {
     console.log('🌱 Starting seed...');
@@ -45,7 +46,7 @@ const seed = async () => {
         console.error('Error creating employees:', employeesError);
         return;
     }
-    console.log('✅ Employees created:', employees.map(e => `${e.name} (${e.badge_code})`).join(', '));
+    console.log('✅ Employees created:', employees.map((e: any) => `${e.name} (${e.badge_code})`).join(', '));
 
     // 3. Create Break Types
     const breakTypesData = [
@@ -72,7 +73,41 @@ const seed = async () => {
         console.error('Error creating break types:', breakTypesError);
         return;
     }
-    console.log('✅ Break Types created:', breakTypes.map(b => `${b.name} (${b.max_minutes} min) - ID: ${b.id}`).join(', '));
+    console.log('✅ Break Types created:', breakTypes.map((b: any) => `${b.name} (${b.max_minutes} min) - ID: ${b.id}`).join(', '));
+
+    // 4. Create Users for Authentication
+    console.log('🔑 Creating users...');
+    const adminPassword = await hashPassword('admin123');
+    const rhPassword = await hashPassword('rh123');
+
+    const usersData = [
+        {
+            company_id: company.id,
+            email: 'admin@pausasaas.com',
+            password_hash: adminPassword,
+            name: 'Administrador',
+            role: 'admin',
+            active: true
+        },
+        {
+            company_id: company.id,
+            email: 'rh@pausasaas.com',
+            password_hash: rhPassword,
+            name: 'RH Manager',
+            role: 'rh',
+            active: true
+        }
+    ];
+
+    const { error: usersError } = await supabase
+        .from('users')
+        .insert(usersData);
+
+    if (usersError) {
+        console.error('Error creating users:', usersError);
+        return;
+    }
+    console.log('✅ Users created: admin@pausasaas.com, rh@pausasaas.com');
 
     console.log('✨ Seed completed successfully!');
 };

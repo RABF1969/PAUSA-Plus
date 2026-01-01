@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import healthRoutes from './routes/health.routes';
 import breaksRoutes from './routes/breaks.routes';
 import dashboardRoutes from './routes/dashboard.routes';
+import authRoutes from './routes/auth.routes';
+import reportsRoutes from './routes/reports.routes';
 
 dotenv.config();
 
@@ -17,6 +19,8 @@ app.use(express.json());
 app.use('/health', healthRoutes);
 app.use('/breaks', breaksRoutes);
 app.use('/dashboard', dashboardRoutes);
+app.use('/auth', authRoutes);
+app.use('/reports', reportsRoutes);
 
 // Root route
 app.get('/', (req, res) => {

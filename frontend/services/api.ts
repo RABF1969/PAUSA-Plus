@@ -60,6 +60,87 @@ export const listBreakTypes = async (): Promise<BreakType[]> => {
     return response.data;
 };
 
+export interface LoginResponse {
+    token: string;
+    user: {
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        company_id: string;
+    };
+}
+
+export const login = async (email: string, password: string): Promise<LoginResponse> => {
+    const response = await api.post<LoginResponse>('/auth/login', { email, password });
+    if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+};
+
+export interface HistoryItem {
+    id: string;
+    employee_name: string;
+    break_type_name: string;
+    started_at: string;
+    ended_at: string;
+    duration_minutes: number;
+    status: 'finished' | 'exceeded';
+}
+
+export interface HistoryResponse {
+    data: HistoryItem[];
+    total: number;
+    page: number;
+    totalPages: number;
+}
+
+export const getBreakHistory = async (params: {
+    page?: number;
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+    employeeId?: string;
+    breakTypeId?: string;
+}): Promise<HistoryResponse> => {
+    const response = await api.get<HistoryResponse>('/reports/history', { params });
+    return response.data;
+};
+
+export const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    if (!window.location.hash.includes('kiosk')) {
+        window.location.hash = '#/login';
+    }
+};
+
+// Request interceptor to add the token to the Authorization header
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+// Response interceptor to handle 401 errors
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            if (!window.location.hash.includes('kiosk')) {
+                window.location.hash = '#/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export interface DashboardOverview {
     totalSlots: number;
     freeSlots: number;
