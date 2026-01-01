@@ -20,7 +20,7 @@ const Dashboard: React.FC = () => {
     try {
       if (isManual) setRefreshing(true);
       else if (!overview) setLoading(true);
-      
+
       setError('');
       const [overviewData, breaksData] = await Promise.all([
         getDashboardOverview(),
@@ -37,70 +37,33 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleEndBreak = async (breakId: string) => {
-    if (!window.confirm('Deseja realmente encerrar esta pausa manualmente?')) return;
-
-    try {
-      await endBreak({ break_id: breakId });
-      await fetchDashboardData();
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Erro ao encerrar pausa');
-    }
-  };
-
   useEffect(() => {
     fetchDashboardData();
-    // Refresh every 10 seconds
-    const interval = setInterval(fetchDashboardData, 10000);
+    const interval = setInterval(() => fetchDashboardData(), 10000);
     return () => clearInterval(interval);
   }, []);
 
+  const handleEndBreak = async (id: string) => {
+    try {
+      await endBreak(id);
+      fetchDashboardData();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Erro ao finalizar pausa');
+    }
+  };
+
   const formatTime = (minutes: number) => {
-    const mins = Math.floor(minutes);
-    const secs = Math.floor((minutes - mins) * 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getIcon = (type: string) => {
-    const lowerType = type.toLowerCase();
-    if (lowerType.includes('wc') || lowerType.includes('banheiro')) return 'wc';
-    if (lowerType.includes('lanche') || lowerType.includes('café')) return 'coffee';
-    if (lowerType.includes('descanso')) return 'bolt';
-    if (lowerType.includes('atendimento')) return 'support_agent';
-    return 'pause';
-  };
-
-  const getColor = (type: string) => {
-    const lowerType = type.toLowerCase();
-    if (lowerType.includes('wc') || lowerType.includes('banheiro')) return 'blue';
-    if (lowerType.includes('lanche') || lowerType.includes('café')) return 'orange';
-    if (lowerType.includes('descanso')) return 'emerald';
-    if (lowerType.includes('atendimento')) return 'purple';
-    return 'gray';
+    const hrs = Math.floor(minutes / 60);
+    const mins = Math.floor(minutes % 60);
+    return hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
   };
 
   if (loading && !overview) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="size-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-bold">Carregando dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && !overview) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md">
-          <p className="text-red-600 font-bold mb-4">{error}</p>
-          <button
-            onClick={fetchDashboardData}
-            className="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600"
-          >
-            Tentar Novamente
-          </button>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+          <p className="text-[var(--text-secondary)] font-bold animate-pulse">Carregando Dashboard...</p>
         </div>
       </div>
     );
@@ -142,36 +105,35 @@ const Dashboard: React.FC = () => {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/30 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               AO VIVO
             </span>
-            <p className="text-gray-500 text-sm font-medium">PAUSA+ • {currentTime.toLocaleTimeString()}</p>
+            <p className="text-[var(--text-secondary)] text-sm font-medium">PAUSA+ • {currentTime.toLocaleTimeString()}</p>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-gray-900">Visão Geral Operacional</h1>
+          <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)]">Visão Geral Operacional</h1>
         </div>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={() => navigate('/reports')}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all active:scale-95"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl text-sm font-bold text-[var(--text-primary)] hover:bg-[var(--bg-accent)] transition-all active:scale-95 shadow-sm"
           >
             <span className="material-symbols-outlined text-[20px]">bar_chart</span> Relatórios
           </button>
           <button
             onClick={() => fetchDashboardData(true)}
             disabled={refreshing}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 ${
-              refreshing 
-                ? 'bg-emerald-100 text-emerald-400 border border-emerald-200 cursor-not-allowed shadow-none' 
-                : 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 ${refreshing
+                ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-400 border border-emerald-200 dark:border-emerald-800 cursor-not-allowed shadow-none'
+                : 'bg-emerald-500 text-white shadow-emerald-200 dark:shadow-emerald-900/20 hover:bg-emerald-600'
+              }`}
           >
             <span className={`material-symbols-outlined text-[20px] ${refreshing ? 'animate-spin' : ''}`}>
               refresh
-            </span> 
+            </span>
             {refreshing ? 'Atualizando...' : 'Atualizar'}
           </button>
         </div>
@@ -180,161 +142,176 @@ const Dashboard: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white p-5 rounded-2xl border border-[#e5ece9] shadow-sm hover:shadow-md transition-all">
+          <div key={i} className="bg-[var(--bg-secondary)] p-5 rounded-2xl border border-[var(--border-primary)] shadow-sm hover:shadow-md transition-all group">
             <div className="flex justify-between items-start mb-4">
-              <div className={`p-2 bg-${stat.color}-50 rounded-xl text-${stat.color}-600`}>
+              <div className={`p-2 bg-${stat.color}-50 dark:bg-${stat.color}-950/30 rounded-xl text-${stat.color}-600 dark:text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
                 <span className="material-symbols-outlined">{stat.icon}</span>
               </div>
-              <span className={`text-[10px] font-black uppercase tracking-wider bg-${stat.color}-50 text-${stat.color}-600 px-2 py-1 rounded-lg`}>
+              <span className={`text-[10px] font-black uppercase tracking-wider bg-${stat.color}-50 dark:bg-${stat.color}-950/30 text-${stat.color}-600 dark:text-${stat.color}-400 px-2 py-1 rounded-lg`}>
                 {stat.trend}
               </span>
             </div>
-            <p className="text-gray-500 text-sm font-medium mb-1">{stat.label}</p>
-            <h3 className="text-2xl font-black text-gray-900">{stat.value}</h3>
+            <p className="text-[var(--text-secondary)] text-sm font-medium mb-1">{stat.label}</p>
+            <h3 className="text-2xl font-black text-[var(--text-primary)]">{stat.value}</h3>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        {/* Active Breaks */}
-        <div className="xl:col-span-2 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
-              <span className="material-symbols-outlined text-gray-400">grid_view</span> Pausas Ativas
-            </h3>
+        {/* Active Breaks Container */}
+        <div className="xl:col-span-2 bg-[var(--bg-secondary)] rounded-[32px] border border-[var(--border-primary)] shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-[var(--border-primary)] flex justify-between items-center bg-[var(--bg-accent)]">
+            <h2 className="text-xl font-black text-[var(--text-primary)] flex items-center gap-2">
+              <span className="material-symbols-outlined text-emerald-500">timer</span>
+              Pausas Ativas
+            </h2>
+            <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-black uppercase">
+              {activeBreaks.length} {activeBreaks.length === 1 ? 'COLABORADOR' : 'COLABORADORES'}
+            </span>
           </div>
 
-          {activeBreaks.length === 0 ? (
-            <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
-              <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">check_circle</span>
-              <p className="text-gray-500 font-bold">Nenhuma pausa ativa no momento</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeBreaks.map((breakItem) => {
-                const color = getColor(breakItem.break_type_name);
-                const icon = getIcon(breakItem.break_type_name);
-
-                return (
-                  <div
-                    key={breakItem.id}
-                    className={`relative bg-white rounded-2xl p-5 border-l-4 shadow-sm group transition-all ${breakItem.status === 'alert' ? 'border-red-500 ring-2 ring-red-50' : `border-${color}-500`
-                      }`}
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <span className={`text-[10px] font-black uppercase tracking-widest ${breakItem.status === 'alert' ? 'text-red-600' : `text-${color}-600`
-                          }`}>
-                          {breakItem.status === 'alert' ? 'Alerta Tempo' : breakItem.break_type_name}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className={`material-symbols-outlined text-${color}-500 text-xl`}>
-                            {icon}
-                          </span>
-                          <h4 className="text-lg font-black text-gray-900">{breakItem.break_type_name}</h4>
-                        </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[var(--bg-primary)]">
+                  <th className="px-6 py-4 text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">Colaborador</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">Pausa</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">Início</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">Duração</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em] text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border-primary)] text-[var(--text-primary)]">
+                {activeBreaks.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-20 text-center">
+                      <div className="flex flex-col items-center gap-2 opacity-40">
+                        <span className="material-symbols-outlined text-4xl">coffee</span>
+                        <p className="font-bold text-sm tracking-tight">Nenhuma pausa ativa no momento</p>
                       </div>
-                      <div className="text-right">
-                        <span className={`text-2xl font-black font-mono tracking-tight ${breakItem.status === 'alert' ? 'text-red-500 animate-pulse' : 'text-gray-900'
-                          }`}>
-                          {formatTime(breakItem.elapsed_minutes)}
-                        </span>
-                        <p className="text-[10px] text-gray-400 uppercase font-bold">Decorrido</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-black">
-                          {breakItem.employee_name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-gray-900 leading-tight">{breakItem.employee_name}</p>
-                          <div className="flex items-center gap-2">
-                            <p className="text-xs text-gray-500 capitalize">{breakItem.employee_role}</p>
-                            <span className="text-gray-300">•</span>
-                            <button
-                              onClick={() => handleEndBreak(breakItem.id)}
-                              className="text-[10px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-widest"
-                            >
-                              Finalizar
-                            </button>
+                    </td>
+                  </tr>
+                ) : (
+                  activeBreaks.map((pausa) => (
+                    <tr key={pausa.id} className="hover:bg-[var(--bg-accent)] transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`size-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[var(--text-primary)] font-black`}>
+                            {pausa.employee_name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-black text-sm tracking-tight">{pausa.employee_name}</p>
+                            <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase">{pausa.employee_role}</p>
                           </div>
                         </div>
-                      </div>
-                      {breakItem.status === 'alert' && (
-                        <span className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
-                          Excedeu
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`material-symbols-outlined text-sm text-${getColor(pausa.break_type_name)}-500`}>
+                            {getIcon(pausa.break_type_name)}
+                          </span>
+                          <span className="font-bold text-sm">{pausa.break_type_name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-bold text-[var(--text-secondary)]">
+                          {new Date(pausa.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm font-black ${pausa.status === 'alert' ? 'text-red-500' : 'text-emerald-500'}`}>
+                              {formatTime(pausa.elapsed_minutes)}
+                            </span>
+                            <span className="text-[10px] text-[var(--text-secondary)] font-bold">/ {pausa.max_minutes}m</span>
+                          </div>
+                          <div className="w-24 h-1.5 bg-[var(--border-primary)] rounded-full overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-1000 ${pausa.status === 'alert' ? 'bg-red-500' : 'bg-emerald-500'}`}
+                              style={{ width: `${Math.min((pausa.elapsed_minutes / pausa.max_minutes) * 100, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleEndBreak(pausa.id)}
+                          className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all active:scale-95 shadow-sm"
+                        >
+                          Finalizar
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="xl:col-span-1 flex flex-col gap-4">
-          <h3 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
-            <span className="material-symbols-outlined text-gray-400">history</span> Atividade Recente
+        {/* Recent Activity Section */}
+        <div className="flex flex-col gap-4">
+          <h3 className="text-lg font-extrabold text-[var(--text-primary)] flex items-center gap-2">
+            <span className="material-symbols-outlined text-[var(--text-secondary)]">history</span> Atividade Recente
           </h3>
-          <div className="bg-white rounded-2xl shadow-sm border border-[#e5ece9] overflow-hidden flex flex-col h-[520px]">
-            <div className="p-4 border-b border-gray-50 bg-gray-50/30">
-              <div className="grid grid-cols-12 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                <div className="col-span-6">Colaborador</div>
-                <div className="col-span-4 text-center">Tipo</div>
-                <div className="col-span-2 text-right">Tempo</div>
+          <div className="flex flex-col gap-3">
+            {activeBreaks.length === 0 ? (
+              <div className="bg-[var(--bg-secondary)] rounded-2xl p-8 text-center border border-[var(--border-primary)] shadow-sm">
+                <p className="text-[var(--text-secondary)] text-sm font-bold">Nenhum histórico recente</p>
               </div>
-            </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-              {activeBreaks.length === 0 ? (
-                <div className="p-8 text-center text-gray-400">
-                  <p className="text-sm font-medium">Nenhuma atividade recente</p>
+            ) : (
+              activeBreaks.slice(0, 5).map((activity) => (
+                <div key={activity.id} className="bg-[var(--bg-secondary)] p-4 rounded-xl border border-[var(--border-primary)] shadow-sm flex items-center gap-3 group hover:border-emerald-500/30 transition-all">
+                  <div className={`size-10 rounded-lg bg-[var(--bg-accent)] flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold`}>
+                    <span className="material-symbols-outlined text-xl">
+                      {getIcon(activity.break_type_name)}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-black text-[var(--text-primary)] truncate group-hover:text-emerald-500 transition-colors">
+                      {activity.employee_name}
+                    </p>
+                    <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-wider">
+                      {activity.break_type_name} • {new Date(activity.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-black text-emerald-500">
+                      LIVE
+                    </span>
+                  </div>
                 </div>
-              ) : (
-                activeBreaks.map((item, i) => {
-                  const color = getColor(item.break_type_name);
-                  const icon = getIcon(item.break_type_name);
-
-                  return (
-                    <div key={item.id} className="p-4 border-b border-gray-50 hover:bg-gray-50/50 transition-all group">
-                      <div className="grid grid-cols-12 items-center">
-                        <div className="col-span-6 flex items-center gap-3">
-                          <div className="size-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-black text-xs">
-                            {item.employee_name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-bold text-gray-900 truncate">{item.employee_name}</p>
-                            <p className="text-[10px] text-gray-400 font-medium">Há {item.elapsed_minutes} min</p>
-                          </div>
-                        </div>
-                        <div className="col-span-4 flex justify-center">
-                          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-${color}-50 text-${color}-600`}>
-                            <span className="material-symbols-outlined text-xs">{icon}</span>
-                            <span className="text-[10px] font-black uppercase whitespace-nowrap">{item.break_type_name}</span>
-                          </div>
-                        </div>
-                        <div className="col-span-2 text-right">
-                          <span className={`text-sm font-bold ${item.status === 'alert' ? 'text-red-500' : 'text-gray-900'}`}>
-                            {formatTime(item.elapsed_minutes)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-            <div className="p-3 bg-gray-50/50 border-t border-gray-50 text-center">
-              <button className="text-xs font-bold text-emerald-600 hover:text-emerald-700">Ver Histórico Completo</button>
-            </div>
+              ))
+            )}
+          </div>
+          <div className="p-3 bg-[var(--bg-accent)] border border-[var(--border-primary)] rounded-2xl text-center">
+            <button className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 uppercase tracking-widest">
+              Ver Histórico Completo
+            </button>
           </div>
         </div>
       </div>
     </div>
   );
+};
+
+const getColor = (type: string) => {
+  const t = type.toLowerCase();
+  if (t.includes('café')) return 'orange';
+  if (t.includes('almoço')) return 'blue';
+  if (t.includes('banheiro')) return 'purple';
+  if (t.includes('descanso')) return 'emerald';
+  return 'emerald';
+};
+
+const getIcon = (type: string) => {
+  const t = type.toLowerCase();
+  if (t.includes('café')) return 'coffee';
+  if (t.includes('almoço')) return 'restaurant';
+  if (t.includes('banheiro')) return 'wc';
+  if (t.includes('descanso')) return 'bedtime';
+  return 'timer';
 };
 
 export default Dashboard;

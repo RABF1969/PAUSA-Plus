@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #f6f8f7;
+  --bg-secondary: #ffffff;
+  --bg-accent: #f0fdf4;
+  --text-primary: #111815;
+  --text-secondary: #64748b;
+  --border-primary: #e5ece9;
+  --emerald-600: #059669;
+  --emerald-500: #10b981;
+}
+
+.dark {
+  --bg-primary: #0f171a;
+  --bg-secondary: #1a2326;
+  --bg-accent: #1e292d;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-primary: #2d373a;
+  --emerald-600: #10b981;
+  --emerald-500: #34d399;
+}
+
+body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  font-family: 'Manrope', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Material Symbols customization */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  transition: color 0.3s ease;
+}
+
+.filled {
+  font-variation-settings: 'FILL' 1;
+}
+
+/* Custom Scrollbar for Dark Mode */
+.dark ::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 5px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3d4a4e;
+}
+
+/* Global Transition */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Keep cards sharp */
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+}

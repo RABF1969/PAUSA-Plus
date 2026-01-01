@@ -26,17 +26,17 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#111815] flex flex-col items-center justify-center p-8 text-white font-sans">
+        <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col items-center justify-center p-8 text-[var(--text-primary)] font-sans">
             <div className="max-w-md w-full space-y-8">
                 <div className="text-center">
                     <div className="size-16 bg-emerald-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-6 shadow-lg shadow-emerald-500/20">
                         <span className="material-symbols-outlined text-4xl">lock</span>
                     </div>
                     <h1 className="text-4xl font-black tracking-tight mb-2">PAUSA+ Dashboard</h1>
-                    <p className="text-gray-400 font-medium">Acesso restrito para Gestores e RH</p>
+                    <p className="text-[var(--text-secondary)] font-medium">Acesso restrito para Gestores e RH</p>
                 </div>
 
-                <form onSubmit={handleLogin} className="mt-8 space-y-6 bg-white/5 p-8 rounded-[32px] border border-white/10 backdrop-blur-xl">
+                <form onSubmit={handleLogin} className="mt-8 space-y-6 bg-[var(--bg-secondary)] p-8 rounded-[32px] border border-[var(--border-primary)] backdrop-blur-xl shadow-xl">
                     {error && (
                         <div className="bg-red-500/10 border border-red-500/50 rounded-2xl p-4 text-red-400 text-sm font-bold animate-shake">
                             {error}
@@ -44,25 +44,25 @@ const Login: React.FC = () => {
                     )}
 
                     <div className="space-y-2">
-                        <label className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">E-mail Corporativo</label>
+                        <label className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1">E-mail Corporativo</label>
                         <input
                             type="email"
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-black/20 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                            className="w-full bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-2xl px-5 py-4 text-[var(--text-primary)] focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-[var(--text-secondary)]"
                             placeholder="seu@email.com"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Senha</label>
+                        <label className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1">Senha</label>
                         <input
                             type="password"
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-black/20 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                            className="w-full bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-2xl px-5 py-4 text-[var(--text-primary)] focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-[var(--text-secondary)]"
                             placeholder="••••••••"
                         />
                     </div>
@@ -70,19 +70,19 @@ const Login: React.FC = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-black py-4 rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50"
+                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50"
                     >
                         {loading ? 'AUTENTICANDO...' : 'ENTRAR NO DASHBOARD'}
                     </button>
 
                     <div className="text-center">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-[var(--text-secondary)]">
                             Problemas no acesso? <span className="text-emerald-500 font-bold cursor-pointer">Contatar TI</span>
                         </p>
                     </div>
                 </form>
 
-                <div className="pt-8 text-center text-gray-600 text-xs font-medium uppercase tracking-widest">
+                <div className="pt-8 text-center text-[var(--text-secondary)] text-xs font-medium uppercase tracking-widest">
                     Pausa SaaS © 2026 • v1.0.0
                 </div>
             </div>

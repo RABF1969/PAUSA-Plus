@@ -60,31 +60,31 @@ const BreakTypeModal: React.FC<BreakTypeModalProps> = ({ isOpen, onClose, onSave
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
-                <div className="p-8 border-b border-gray-100 flex justify-between items-center">
-                    <h2 className="text-2xl font-black text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-[var(--bg-secondary)] rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200 border border-[var(--border-primary)]">
+                <div className="p-8 border-b border-[var(--border-primary)] flex justify-between items-center bg-[var(--bg-accent)]">
+                    <h2 className="text-2xl font-black text-[var(--text-primary)]">
                         {breakType ? 'Editar Pausa' : 'Nova Pausa'}
                     </h2>
-                    <button onClick={onClose} className="size-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
-                        <span className="material-symbols-outlined text-gray-400">close</span>
+                    <button onClick={onClose} className="size-10 rounded-full hover:bg-[var(--bg-primary)] flex items-center justify-center transition-colors">
+                        <span className="material-symbols-outlined text-[var(--text-secondary)]">close</span>
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-8 space-y-6">
                     {error && (
-                        <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl text-sm font-bold animate-in slide-in-from-top-2">
+                        <div className="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/50 text-red-600 dark:text-red-400 p-4 rounded-2xl text-sm font-bold animate-in slide-in-from-top-2">
                             {error}
                         </div>
                     )}
 
                     <div className="space-y-2">
-                        <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Nome da Pausa</label>
+                        <label className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1">Nome da Pausa</label>
                         <input
                             type="text"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm font-bold focus:border-emerald-500/50 outline-none transition-all"
+                            className="w-full bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-2xl px-6 py-4 text-sm text-[var(--text-primary)] font-bold focus:border-emerald-500 outline-none transition-all placeholder:text-[var(--text-secondary)]"
                             placeholder="Ex: Lanche da Tarde"
                             required
                         />
@@ -92,39 +92,39 @@ const BreakTypeModal: React.FC<BreakTypeModalProps> = ({ isOpen, onClose, onSave
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Tempo (Min)</label>
+                            <label className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1">Tempo (Min)</label>
                             <input
                                 type="number"
                                 min="1"
                                 value={formData.max_minutes}
                                 onChange={(e) => setFormData({ ...formData, max_minutes: parseInt(e.target.value) })}
-                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm font-bold focus:border-emerald-500/50 outline-none transition-all"
+                                className="w-full bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-2xl px-6 py-4 text-sm text-[var(--text-primary)] font-bold focus:border-emerald-500 outline-none transition-all"
                                 required
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Capacidade</label>
+                            <label className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1">Capacidade</label>
                             <input
                                 type="number"
                                 min="1"
                                 value={formData.capacity}
                                 onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
-                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-sm font-bold focus:border-emerald-500/50 outline-none transition-all"
+                                className="w-full bg-[var(--bg-primary)] border border-[var(--border-primary)] rounded-2xl px-6 py-4 text-sm text-[var(--text-primary)] font-bold focus:border-emerald-500 outline-none transition-all"
                                 required
                             />
                         </div>
                     </div>
 
                     {breakType && (
-                        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div className="flex items-center gap-3 p-4 bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-primary)]">
                             <input
                                 type="checkbox"
                                 id="active"
                                 checked={formData.active}
                                 onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                                className="size-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                className="size-5 rounded border-[var(--border-primary)] text-emerald-600 focus:ring-emerald-500"
                             />
-                            <label htmlFor="active" className="text-sm font-bold text-gray-700 select-none">Tipo de Pausa Ativo</label>
+                            <label htmlFor="active" className="text-sm font-bold text-[var(--text-primary)] select-none">Tipo de Pausa Ativo</label>
                         </div>
                     )}
 
@@ -132,14 +132,14 @@ const BreakTypeModal: React.FC<BreakTypeModalProps> = ({ isOpen, onClose, onSave
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest text-gray-500 hover:bg-gray-100 transition-all font-sans"
+                            className="flex-1 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest text-[var(--text-secondary)] hover:bg-[var(--bg-accent)] transition-all font-sans"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex-1 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest text-white bg-emerald-500 hover:bg-emerald-600 shadow-[0_8px_20px_rgba(16,185,129,0.2)] disabled:opacity-50 transition-all font-sans"
+                            className="flex-1 px-6 py-4 rounded-2xl text-sm font-black uppercase tracking-widest text-white bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-200 dark:shadow-emerald-900/20 disabled:opacity-50 transition-all font-sans active:scale-95"
                         >
                             {loading ? 'Salvando...' : 'Confirmar'}
                         </button>

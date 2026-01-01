@@ -10,6 +10,7 @@ import TabletTimer from './pages/TabletTimer';
 import Login from './pages/Login';
 import Reports from './pages/Reports';
 import Sidebar from './components/Sidebar';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -20,7 +21,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="flex min-h-screen bg-[#f6f8f7]">
+  <div className="flex min-h-screen bg-[var(--bg-primary)]">
     <Sidebar />
     <main className="flex-1 overflow-y-auto p-8">
       {children}
@@ -30,42 +31,44 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 const App: React.FC = () => {
   return (
-    <HashRouter>
-      <Routes>
-        {/* Auth Route */}
-        <Route path="/login" element={<Login />} />
+    <ThemeProvider>
+      <HashRouter>
+        <Routes>
+          {/* Auth Route */}
+          <Route path="/login" element={<Login />} />
 
-        {/* Admin Routes (Protected) */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            <AdminLayout><Dashboard /></AdminLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/employees" element={
-          <ProtectedRoute>
-            <AdminLayout><Employees /></AdminLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/reports" element={
-          <ProtectedRoute>
-            <AdminLayout><Reports /></AdminLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <AdminLayout><Settings /></AdminLayout>
-          </ProtectedRoute>
-        } />
+          {/* Admin Routes (Protected) */}
+          <Route path="/" element={
+            <ProtectedRoute>
+              <AdminLayout><Dashboard /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/employees" element={
+            <ProtectedRoute>
+              <AdminLayout><Employees /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/reports" element={
+            <ProtectedRoute>
+              <AdminLayout><Reports /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <AdminLayout><Settings /></AdminLayout>
+            </ProtectedRoute>
+          } />
 
-        {/* Tablet Kiosk Routes (Public) */}
-        <Route path="/kiosk/login" element={<TabletLogin />} />
-        <Route path="/kiosk/scan" element={<TabletScan />} />
-        <Route path="/kiosk/active" element={<TabletTimer />} />
+          {/* Tablet Kiosk Routes (Public) */}
+          <Route path="/kiosk/login" element={<TabletLogin />} />
+          <Route path="/kiosk/scan" element={<TabletScan />} />
+          <Route path="/kiosk/active" element={<TabletTimer />} />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </HashRouter>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </HashRouter>
+    </ThemeProvider>
   );
 };
 
