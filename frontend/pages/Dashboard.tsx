@@ -45,7 +45,7 @@ const Dashboard: React.FC = () => {
 
   const handleEndBreak = async (id: string) => {
     try {
-      await endBreak(id);
+      await endBreak({ break_id: id });
       fetchDashboardData();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Erro ao finalizar pausa');
@@ -127,8 +127,8 @@ const Dashboard: React.FC = () => {
             onClick={() => fetchDashboardData(true)}
             disabled={refreshing}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 ${refreshing
-                ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-400 border border-emerald-200 dark:border-emerald-800 cursor-not-allowed shadow-none'
-                : 'bg-emerald-500 text-white shadow-emerald-200 dark:shadow-emerald-900/20 hover:bg-emerald-600'
+              ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-400 border border-emerald-200 dark:border-emerald-800 cursor-not-allowed shadow-none'
+              : 'bg-emerald-500 text-white shadow-emerald-200 dark:shadow-emerald-900/20 hover:bg-emerald-600'
               }`}
           >
             <span className={`material-symbols-outlined text-[20px] ${refreshing ? 'animate-spin' : ''}`}>
@@ -286,7 +286,10 @@ const Dashboard: React.FC = () => {
             )}
           </div>
           <div className="p-3 bg-[var(--bg-accent)] border border-[var(--border-primary)] rounded-2xl text-center">
-            <button className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 uppercase tracking-widest">
+            <button
+              onClick={() => navigate('/reports')}
+              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 uppercase tracking-widest transition-colors"
+            >
               Ver Histórico Completo
             </button>
           </div>
