@@ -60,4 +60,33 @@ export const listBreakTypes = async (): Promise<BreakType[]> => {
     return response.data;
 };
 
+export interface DashboardOverview {
+    totalSlots: number;
+    freeSlots: number;
+    activePauses: number;
+    averageTimeMinutes: number;
+    efficiency: number;
+}
+
+export interface ActiveBreak {
+    id: string;
+    employee_name: string;
+    employee_role: string;
+    break_type_name: string;
+    started_at: string;
+    elapsed_minutes: number;
+    max_minutes: number;
+    status: 'normal' | 'alert';
+}
+
+export const getDashboardOverview = async (): Promise<DashboardOverview> => {
+    const response = await api.get<DashboardOverview>('/dashboard/overview');
+    return response.data;
+};
+
+export const getActiveBreaks = async (): Promise<ActiveBreak[]> => {
+    const response = await api.get<ActiveBreak[]>('/dashboard/active');
+    return response.data;
+};
+
 export default api;

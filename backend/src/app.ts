@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import healthRoutes from './routes/health.routes';
 import breaksRoutes from './routes/breaks.routes';
+import dashboardRoutes from './routes/dashboard.routes';
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 // Routes
 app.use('/health', healthRoutes);
 app.use('/breaks', breaksRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 // Root route
 app.get('/', (req, res) => {
