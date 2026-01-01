@@ -24,14 +24,14 @@ const seed = async () => {
         {
             company_id: company.id,
             name: 'João Silva',
-            badge_code: 'FUNC001',
+            badge_code: '0001',
             role: 'operador',
             active: true
         },
         {
             company_id: company.id,
             name: 'Maria Santos',
-            badge_code: 'FUNC002',
+            badge_code: '0002',
             role: 'gestor',
             active: true
         }

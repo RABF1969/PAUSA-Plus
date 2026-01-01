@@ -39,10 +39,8 @@ export const startBreak = async (badge_code: string, break_type_id: string): Pro
     return response.data;
 };
 
-export const endBreak = async (badge_code: string): Promise<EndBreakResponse> => {
-    const response = await api.post<EndBreakResponse>('/breaks/end', {
-        badge_code,
-    });
+export const endBreak = async (params: { badge_code?: string, break_id?: string }): Promise<EndBreakResponse> => {
+    const response = await api.post<EndBreakResponse>('/breaks/end', params);
     return response.data;
 };
 
@@ -52,6 +50,8 @@ export interface BreakType {
     name: string;
     max_minutes: number;
     active: boolean;
+    capacity: number;
+    active_count: number;
     created_at: string;
 }
 
@@ -160,13 +160,47 @@ export interface ActiveBreak {
     status: 'normal' | 'alert';
 }
 
-export const getDashboardOverview = async (): Promise<DashboardOverview> => {
-    const response = await api.get<DashboardOverview>('/dashboard/overview');
+export const getActiveBreaks = async (): Promise<ActiveBreak[]> => {
+    const response = await api.get<ActiveBreak[]>('/dashboard/active');
     return response.data;
 };
 
-export const getActiveBreaks = async (): Promise<ActiveBreak[]> => {
-    const response = await api.get<ActiveBreak[]>('/dashboard/active');
+export interface Employee {
+    id: string;
+    company_id: string;
+    name: string;
+    badge_code: string;
+    role: string;
+    active: boolean;
+    created_at: string;
+}
+
+export const listEmployees = async (): Promise<Employee[]> => {
+    const response = await api.get<Employee[]>('/employees');
+    return response.data;
+};
+
+export const createEmployee = async (data: {
+    name: string;
+    role: string;
+    badge_code?: string;
+}): Promise<Employee> => {
+    const response = await api.post<Employee>('/employees', data);
+    return response.data;
+};
+
+export const updateEmployee = async (id: string, data: { name: string; role: string }): Promise<Employee> => {
+    const response = await api.put<Employee>(`/employees/${id}`, data);
+    return response.data;
+};
+
+export const setEmployeeActive = async (id: string, active: boolean): Promise<Employee> => {
+    const response = await api.patch<Employee>(`/employees/${id}/active`, { active });
+    return response.data;
+};
+
+export const getDashboardOverview = async (): Promise<DashboardOverview> => {
+    const response = await api.get<DashboardOverview>('/dashboard/overview');
     return response.data;
 };
 

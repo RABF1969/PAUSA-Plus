@@ -8,26 +8,25 @@ export const getOverviewStats = async (companyId: string) => {
         .eq('company_id', companyId)
         .eq('active', true);
 
-    if (breakTypesError) throw new Error(breakTypesError.message);
-
     const totalSlots = breakTypes?.length || 0;
 
-    // Get active breaks count
-    // We need to filter break_events by company_id, but the table doesn't have it directly.
-    // We can join with employees or break_types.
-    const { data: activeBreaks, error: activeBreaksError } = await supabase
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEBUG] getOverviewStats: totalSlots=${totalSlots} for company=${companyId}`);
+    }
+
+    const { data: activeBreaks, error: activePausesError } = await supabase
         .from('break_events')
         .select(`
-      id,
-      employees!inner(company_id)
-    `)
+            id,
+            employees!inner(company_id)
+        `)
         .eq('status', 'active')
         .eq('employees.company_id', companyId);
 
-    if (activeBreaksError) throw new Error(activeBreaksError.message);
+    if (activePausesError) throw new Error(activePausesError.message);
 
-    const activePauses = activeBreaks?.length || 0;
-    const freeSlots = Math.max(0, totalSlots - activePauses);
+    const activePausesCount = activeBreaks?.length || 0;
+    const freeSlots = Math.max(0, totalSlots - activePausesCount);
 
     // Calculate average time for today's completed breaks
     const today = new Date();
@@ -73,7 +72,7 @@ export const getOverviewStats = async (companyId: string) => {
     return {
         totalSlots,
         freeSlots,
-        activePauses,
+        activePauses: activePausesCount,
         averageTimeMinutes,
         efficiency,
     };
@@ -83,18 +82,19 @@ export const getActiveBreaks = async (companyId: string) => {
     const { data, error } = await supabase
         .from('break_events')
         .select(`
-      id,
-      started_at,
-      employees!inner(
-        name,
-        role,
-        company_id
-      ),
-      break_types (
-        name,
-        max_minutes
-      )
-    `)
+            id,
+            started_at,
+            status,
+            employees!inner(
+                name,
+                role,
+                company_id
+            ),
+            break_types (
+                name,
+                max_minutes
+            )
+        `)
         .eq('status', 'active')
         .eq('employees.company_id', companyId)
         .order('started_at', { ascending: false });

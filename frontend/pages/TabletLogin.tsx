@@ -4,22 +4,25 @@ import { useNavigate } from 'react-router-dom';
 
 const TabletLogin: React.FC = () => {
   const [matricula, setMatricula] = useState('');
-  const [pin, setPin] = useState('');
-  const [activeField, setActiveField] = useState<'matricula' | 'pin'>('matricula');
   const navigate = useNavigate();
 
   const handleKeypadPress = (val: string) => {
-    if (activeField === 'matricula') setMatricula(prev => (prev.length < 6 ? prev + val : prev));
-    else setPin(prev => (prev.length < 4 ? prev + val : prev));
+    setMatricula(prev => (prev.length < 6 ? prev + val : prev));
   };
 
   const handleBackspace = () => {
-    if (activeField === 'matricula') setMatricula(prev => prev.slice(0, -1));
-    else setPin(prev => prev.slice(0, -1));
+    setMatricula(prev => prev.slice(0, -1));
+  };
+
+  const handleClear = () => {
+    setMatricula('');
   };
 
   const handleLogin = () => {
-    if (matricula && pin) navigate('/kiosk/scan');
+    if (matricula) {
+      // In a real app, we'd verify the matricula here or pass it to scan
+      navigate('/kiosk/scan', { state: { badgeCode: matricula } });
+    }
   };
 
   return (
@@ -32,62 +35,55 @@ const TabletLogin: React.FC = () => {
               <span className="material-symbols-outlined text-4xl">person_pin</span>
             </div>
             <h1 className="text-4xl font-black tracking-tight text-gray-900 mb-2">Identifique-se</h1>
-            <p className="text-gray-500 font-medium">Use seu PIN para gerenciar suas pausas.</p>
+            <p className="text-gray-500 font-medium">Digite sua matrícula para gerenciar suas pausas.</p>
           </div>
 
           <div className="space-y-4 mb-8">
-            <div 
-              onClick={() => setActiveField('matricula')}
-              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                activeField === 'matricula' ? 'border-emerald-500 bg-emerald-50/20' : 'border-gray-100 bg-white'
-              }`}
-            >
-              <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Matrícula</label>
-              <div className="text-2xl font-black tracking-widest h-8 text-gray-900">{matricula || <span className="text-gray-200">000000</span>}</div>
-            </div>
-
-            <div 
-              onClick={() => setActiveField('pin')}
-              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                activeField === 'pin' ? 'border-emerald-500 bg-emerald-50/20' : 'border-gray-100 bg-white'
-              }`}
-            >
-              <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Senha (PIN)</label>
-              <div className="text-2xl font-black tracking-widest h-8 text-gray-900">{'•'.repeat(pin.length) || <span className="text-gray-200">••••</span>}</div>
+            <div className="p-6 rounded-3xl border-2 border-emerald-500 bg-emerald-50/20 transition-all">
+              <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Matrícula Operacional</label>
+              <div className="text-4xl font-black tracking-[0.3em] h-10 text-gray-900 flex items-center justify-center">
+                {matricula || <span className="text-gray-200">0000</span>}
+              </div>
             </div>
           </div>
 
           {/* Keypad */}
           <div className="grid grid-cols-3 gap-3">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-              <button 
+              <button
                 key={num}
                 onClick={() => handleKeypadPress(num.toString())}
-                className="h-16 rounded-2xl bg-white border border-gray-100 shadow-sm text-2xl font-black text-gray-900 hover:bg-gray-50 active:scale-95 transition-all"
+                className="h-20 rounded-2xl bg-white border border-gray-100 shadow-sm text-2xl font-black text-gray-900 hover:bg-gray-50 active:scale-95 transition-all"
               >
                 {num}
               </button>
             ))}
-            <button className="h-16 rounded-2xl flex items-center justify-center text-gray-300 font-bold text-xs uppercase tracking-tighter">Limpar</button>
-            <button 
+            <button
+              onClick={handleClear}
+              className="h-20 rounded-2xl flex items-center justify-center text-gray-400 font-black text-xs uppercase tracking-widest hover:text-gray-600 transition-colors"
+            >
+              Limpar
+            </button>
+            <button
               onClick={() => handleKeypadPress('0')}
-              className="h-16 rounded-2xl bg-white border border-gray-100 shadow-sm text-2xl font-black text-gray-900 hover:bg-gray-50 active:scale-95 transition-all"
+              className="h-20 rounded-2xl bg-white border border-gray-100 shadow-sm text-2xl font-black text-gray-900 hover:bg-gray-50 active:scale-95 transition-all"
             >
               0
             </button>
-            <button 
+            <button
               onClick={handleBackspace}
-              className="h-16 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 active:scale-95 transition-all"
+              className="h-20 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 active:scale-95 transition-all"
             >
               <span className="material-symbols-outlined text-3xl">backspace</span>
             </button>
           </div>
 
-          <button 
+          <button
             onClick={handleLogin}
-            className="w-full mt-6 h-16 bg-emerald-500 text-white rounded-2xl text-xl font-black shadow-xl shadow-emerald-100 hover:bg-emerald-600 transition-all flex items-center justify-center gap-3"
+            disabled={!matricula}
+            className="w-full mt-8 h-20 bg-emerald-500 text-white rounded-[24px] text-xl font-black shadow-xl shadow-emerald-200 hover:bg-emerald-600 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:shadow-none"
           >
-            ENTRAR <span className="material-symbols-outlined">arrow_forward</span>
+            CONTINUAR <span className="material-symbols-outlined">arrow_forward</span>
           </button>
         </div>
       </div>

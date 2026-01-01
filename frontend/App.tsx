@@ -65,22 +65,6 @@ const App: React.FC = () => {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-
-      {/* Prototype Switcher for Demo Purposes */}
-      <div className="fixed bottom-4 left-4 z-50 flex gap-2">
-        <button
-          onClick={() => window.location.hash = '#/'}
-          className="bg-black text-white px-3 py-1 text-xs rounded-full hover:bg-gray-800"
-        >
-          Web Admin
-        </button>
-        <button
-          onClick={() => window.location.hash = '#/kiosk/login'}
-          className="bg-emerald-600 text-white px-3 py-1 text-xs rounded-full hover:bg-emerald-700"
-        >
-          Tablet Kiosk
-        </button>
-      </div>
     </HashRouter>
   );
 };

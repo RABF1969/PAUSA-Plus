@@ -1,14 +1,127 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { listEmployees, createEmployee, updateEmployee, setEmployeeActive, Employee } from '../services/api';
 
 const Employees: React.FC = () => {
-  const employees = [
-    { id: '1', reg: '#04521', name: 'Carlos Mendes', role: 'Operador I', sector: 'Logística', status: 'Ativo' },
-    { id: '2', reg: '#03102', name: 'Ana Souza', role: 'Supervisora', sector: 'Atendimento', status: 'Ativo' },
-    { id: '3', reg: '#05991', name: 'Roberto Lima', role: 'Operador II', sector: 'Produção', status: 'Inativo' },
-    { id: '4', reg: '#06100', name: 'Júlia Pereira', role: 'Estagiária', sector: 'RH', status: 'Ativo' },
-    { id: '5', reg: '#02230', name: 'Marcos Silva', role: 'Manutenção', sector: 'Serviços Gerais', status: 'Ativo' },
-  ];
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+  // Registration Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    role: ''
+  });
+
+  // Edit Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    role: ''
+  });
+
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
+      const data = await listEmployees();
+      setEmployees(data);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Erro ao carregar funcionários');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+    setFormError('');
+    setFormData({ name: '', role: '' });
+  };
+
+  const handleOpenEditModal = (emp: Employee) => {
+    setEditingEmployee(emp);
+    setEditFormData({ name: emp.name, role: emp.role });
+    setIsEditModalOpen(true);
+    setFormError('');
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError('');
+
+    try {
+      await createEmployee(formData);
+      await fetchEmployees();
+      setIsModalOpen(false);
+    } catch (err: any) {
+      setFormError(err.response?.data?.error || 'Erro ao cadastrar funcionário');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEmployee) return;
+
+    setFormLoading(true);
+    setFormError('');
+
+    try {
+      await updateEmployee(editingEmployee.id, editFormData);
+      await fetchEmployees();
+      setIsEditModalOpen(false);
+    } catch (err: any) {
+      setFormError(err.response?.data?.error || 'Erro ao atualizar funcionário');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleToggleActive = async (emp: Employee) => {
+    const action = emp.active ? 'desativar' : 'reativar';
+    const confirm = window.confirm(`Tem certeza que deseja ${action} o funcionário ${emp.name}? ${emp.active ? 'Ele não aparecerá no Kiosk.' : ''}`);
+
+    if (!confirm) return;
+
+    try {
+      await setEmployeeActive(emp.id, !emp.active);
+      await fetchEmployees();
+    } catch (err: any) {
+      alert(err.response?.data?.error || `Erro ao ${action} funcionário`);
+    }
+  };
+
+  const filteredEmployees = employees.filter(emp => {
+    const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.badge_code.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' && emp.active) ||
+      (statusFilter === 'inactive' && !emp.active);
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="flex flex-col gap-8 animate-in slide-in-from-bottom-4 duration-500">
@@ -17,7 +130,10 @@ const Employees: React.FC = () => {
           <h1 className="text-3xl font-black tracking-tight text-gray-900">Funcionários</h1>
           <p className="text-gray-500 text-base font-medium">Gerencie a equipe operacional e as credenciais de acesso.</p>
         </div>
-        <button className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition-all">
+        <button
+          onClick={handleOpenModal}
+          className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition-all"
+        >
           <span className="material-symbols-outlined text-[20px]">add</span> Novo Funcionário
         </button>
       </header>
@@ -25,64 +141,263 @@ const Employees: React.FC = () => {
       {/* Table Section */}
       <div className="bg-white rounded-2xl border border-[#e5ece9] shadow-sm overflow-hidden">
         <div className="p-4 border-b border-gray-50 flex flex-col md:flex-row gap-4 items-center justify-between">
-           <div className="relative w-full md:w-96">
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+            <div className="relative w-full md:w-96">
               <span className="absolute left-3 top-2.5 text-gray-400 material-symbols-outlined">search</span>
-              <input 
-                type="text" 
-                placeholder="Buscar por nome ou matrícula..." 
+              <input
+                type="text"
+                placeholder="Buscar por nome ou matrícula..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500"
               />
-           </div>
-           <div className="flex gap-2">
-             <button className="p-2 text-gray-500 hover:bg-gray-50 rounded-lg"><span className="material-symbols-outlined">filter_list</span></button>
-             <button className="p-2 text-gray-500 hover:bg-gray-50 rounded-lg"><span className="material-symbols-outlined">sort</span></button>
-           </div>
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="px-4 py-2 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 font-bold text-gray-600"
+            >
+              <option value="all">Todos os Status</option>
+              <option value="active">Apenas Ativos</option>
+              <option value="inactive">Apenas Inativos</option>
+            </select>
+          </div>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Colaborador</th>
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Matrícula</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Setor</th>
+                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Cargo</th>
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Status</th>
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {employees.map((emp) => (
-                <tr key={emp.id} className="group hover:bg-gray-50/50 transition-all">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <img src={`https://picsum.photos/seed/${emp.id}/100`} className="size-10 rounded-full" alt="" />
-                      <div>
-                        <p className="text-sm font-bold text-gray-900 leading-tight">{emp.name}</p>
-                        <p className="text-[11px] text-gray-400 font-medium">{emp.role}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-gray-600">{emp.reg}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">{emp.sector}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                      emp.status === 'Ativo' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
-                    }`}>
-                      {emp.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-1.5 text-gray-400 hover:text-emerald-500 rounded-lg"><span className="material-symbols-outlined text-lg">edit</span></button>
-                      <button className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg"><span className="material-symbols-outlined text-lg">block</span></button>
-                    </div>
-                  </td>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-medium">Carregando funcionários...</td>
                 </tr>
-              ))}
+              ) : filteredEmployees.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-medium">Nenhum funcionário encontrado.</td>
+                </tr>
+              ) : (
+                filteredEmployees.map((emp) => (
+                  <tr key={emp.id} className={`group hover:bg-gray-50/50 transition-all ${!emp.active ? 'opacity-60' : ''}`}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className={`size-10 rounded-full flex items-center justify-center font-black text-sm ${emp.active ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                          {emp.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-gray-900 leading-tight">{emp.name}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-gray-600">{emp.badge_code}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium capitalize">{emp.role}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${emp.active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
+                        }`}>
+                        {emp.active ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleOpenEditModal(emp)}
+                          className="p-1.5 text-gray-400 hover:text-emerald-500 rounded-lg transition-colors"
+                          title="Editar"
+                        >
+                          <span className="material-symbols-outlined text-lg">edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleToggleActive(emp)}
+                          className={`p-1.5 rounded-lg transition-colors ${emp.active ? 'text-gray-400 hover:text-red-500' : 'text-emerald-500 hover:text-emerald-600'}`}
+                          title={emp.active ? 'Desativar' : 'Reativar'}
+                        >
+                          <span className="material-symbols-outlined text-lg">{emp.active ? 'block' : 'check_circle'}</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Registration Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black text-gray-900 leading-none">Novo Funcionário</h2>
+                <p className="text-gray-500 text-sm font-medium mt-2">Cadastre um novo colaborador no sistema.</p>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="size-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              {formError && (
+                <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold">
+                  {formError}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Nome Completo</label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Ex: João Silva"
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Cargo</label>
+                  <select
+                    name="role"
+                    required
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-emerald-500 transition-colors appearance-none"
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="operador">Operador</option>
+                    <option value="gestor">Gestor</option>
+                    <option value="rh">RH</option>
+                  </select>
+                </div>
+
+                <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex items-center gap-3">
+                  <span className="material-symbols-outlined text-emerald-500 text-lg">info</span>
+                  <p className="text-[11px] text-emerald-700 font-bold leading-tight">
+                    A matrícula (badge code) será gerada automaticamente pelo sistema após a confirmação.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 py-4 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-2xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className="flex-[2] py-4 bg-emerald-500 text-white text-sm font-black rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {formLoading ? 'CADASTRANDO...' : 'CADASTRAR FUNCIONÁRIO'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black text-gray-900 leading-none">Editar Funcionário</h2>
+                <p className="text-gray-500 text-sm font-medium mt-2">Atualize as informações do colaborador.</p>
+              </div>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="size-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="p-8 space-y-6">
+              {formError && (
+                <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold">
+                  {formError}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Matrícula (Imutável)</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={editingEmployee?.badge_code}
+                    className="w-full bg-gray-100 border border-gray-100 rounded-2xl px-5 py-4 text-sm text-gray-500 font-mono cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Nome Completo</label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    value={editFormData.name}
+                    onChange={handleEditInputChange}
+                    placeholder="Ex: João Silva"
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Cargo</label>
+                  <select
+                    name="role"
+                    required
+                    value={editFormData.role}
+                    onChange={handleEditInputChange}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-emerald-500 transition-colors appearance-none"
+                  >
+                    <option value="operador">Operador</option>
+                    <option value="gestor">Gestor</option>
+                    <option value="rh">RH</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="flex-1 py-4 text-sm font-bold text-gray-500 hover:bg-gray-50 rounded-2xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className="flex-[2] py-4 bg-emerald-500 text-white text-sm font-black rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {formLoading ? 'SALVANDO...' : 'SALVAR ALTERAÇÕES'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

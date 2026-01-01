@@ -9,8 +9,25 @@ const TabletTimer: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  // Get break data from navigation state
-  const breakData = (location.state as any)?.breakData as StartBreakResponse | undefined;
+  // Get break data from navigation state or sessionStorage
+  const [breakData, setBreakData] = useState<StartBreakResponse | undefined>(() => {
+    const fromState = (location.state as any)?.breakData;
+    if (fromState) {
+      sessionStorage.setItem('activeBreak', JSON.stringify(fromState));
+      return fromState;
+    }
+    const fromStorage = sessionStorage.getItem('activeBreak');
+    return fromStorage ? JSON.parse(fromStorage) : undefined;
+  });
+
+  const [badgeCode] = useState<string>(() => {
+    const fromState = (location.state as any)?.badgeCode;
+    if (fromState) {
+      sessionStorage.setItem('activeBadgeCode', fromState);
+      return fromState;
+    }
+    return sessionStorage.getItem('activeBadgeCode') || '1001';
+  });
 
   useEffect(() => {
     const interval = setInterval(() => setSeconds(s => s + 1), 1000);
@@ -33,12 +50,15 @@ const TabletTimer: React.FC = () => {
     setError('');
 
     try {
-      // Extract badge_code from employee data or use hardcoded for now
-      const badge_code = 'FUNC001'; // TODO: Get from breakData or context
+      // Use break_id primarily, fallback to badge_code for compatibility
+      const result = await endBreak({
+        break_id: breakData.id,
+        badge_code: badgeCode
+      });
 
-      const result = await endBreak(badge_code);
-
-      // Show success and navigate back
+      // Clear session data
+      sessionStorage.removeItem('activeBreak');
+      sessionStorage.removeItem('activeBadgeCode');
       alert(`Pausa encerrada! Duração: ${result.duration_minutes} min${result.status === 'exceeded' ? ' (excedeu o limite)' : ''}`);
       navigate('/kiosk/login');
     } catch (err: any) {
@@ -130,8 +150,8 @@ const TabletTimer: React.FC = () => {
             onClick={handleEndBreak}
             disabled={loading}
             className={`w-full max-w-md h-20 rounded-3xl text-2xl font-black shadow-2xl transition-all flex items-center justify-center gap-4 ${loading
-                ? 'bg-gray-400 text-white cursor-not-allowed'
-                : 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600 active:scale-95'
+              ? 'bg-gray-400 text-white cursor-not-allowed'
+              : 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600 active:scale-95'
               }`}
           >
             {loading ? 'ENCERRANDO...' : 'ENCERRAR PAUSA'}

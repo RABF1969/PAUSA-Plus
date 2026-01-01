@@ -6,6 +6,7 @@ import breaksRoutes from './routes/breaks.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import authRoutes from './routes/auth.routes';
 import reportsRoutes from './routes/reports.routes';
+import employeesRoutes from './routes/employees.routes';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use('/breaks', breaksRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/auth', authRoutes);
 app.use('/reports', reportsRoutes);
+app.use('/employees', employeesRoutes);
 
 // Root route
 app.get('/', (req, res) => {
