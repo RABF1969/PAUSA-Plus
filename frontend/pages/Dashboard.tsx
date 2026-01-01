@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getDashboardOverview, getActiveBreaks, endBreak, DashboardOverview, ActiveBreak } from '../services/api';
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [activeBreaks, setActiveBreaks] = useState<ActiveBreak[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
@@ -13,9 +16,11 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (isManual = false) => {
     try {
-      if (!overview) setLoading(true);
+      if (isManual) setRefreshing(true);
+      else if (!overview) setLoading(true);
+      
       setError('');
       const [overviewData, breaksData] = await Promise.all([
         getDashboardOverview(),
@@ -28,6 +33,7 @@ const Dashboard: React.FC = () => {
       console.error(err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -148,14 +154,25 @@ const Dashboard: React.FC = () => {
           <h1 className="text-3xl font-black tracking-tight text-gray-900">Visão Geral Operacional</h1>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">
-            <span className="material-symbols-outlined text-[20px]">print</span> Relatório
+          <button 
+            onClick={() => navigate('/reports')}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[20px]">bar_chart</span> Relatórios
           </button>
           <button
-            onClick={fetchDashboardData}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all"
+            onClick={() => fetchDashboardData(true)}
+            disabled={refreshing}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95 ${
+              refreshing 
+                ? 'bg-emerald-100 text-emerald-400 border border-emerald-200 cursor-not-allowed shadow-none' 
+                : 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600'
+            }`}
           >
-            <span className="material-symbols-outlined text-[20px]">refresh</span> Atualizar
+            <span className={`material-symbols-outlined text-[20px] ${refreshing ? 'animate-spin' : ''}`}>
+              refresh
+            </span> 
+            {refreshing ? 'Atualizando...' : 'Atualizar'}
           </button>
         </div>
       </header>
