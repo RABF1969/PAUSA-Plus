@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getPlateContext } from '../utils/kioskContext';
 
 const TabletLogin: React.FC = () => {
   const [matricula, setMatricula] = useState('');
@@ -24,6 +25,13 @@ const TabletLogin: React.FC = () => {
       navigate('/kiosk/scan', { state: { badgeCode: matricula } });
     }
   };
+
+  React.useEffect(() => {
+    const plate = getPlateContext();
+    if (!plate) {
+      navigate('/kiosk');
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-white flex overflow-hidden">

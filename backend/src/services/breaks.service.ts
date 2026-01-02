@@ -3,9 +3,10 @@ import { supabase } from '../lib/supabase';
 interface StartBreakParams {
     badge_code: string;
     break_type_id: string;
+    plate_id?: string;
 }
 
-export const startBreak = async ({ badge_code, break_type_id }: StartBreakParams) => {
+export const startBreak = async ({ badge_code, break_type_id, plate_id }: StartBreakParams) => {
     // 1. Get Break Type to find the company_id, max_minutes and capacity
     const { data: breakType, error: breakTypeError } = await supabase
         .from('break_types')
@@ -71,7 +72,8 @@ export const startBreak = async ({ badge_code, break_type_id }: StartBreakParams
             employee_id: employee.id,
             break_type_id: break_type_id,
             started_at: new Date().toISOString(),
-            status: 'active'
+            status: 'active',
+            plate_id: plate_id || null
         })
         .select()
         .single();

@@ -31,10 +31,11 @@ export interface EndBreakResponse {
     exceeded_minutes: number;
 }
 
-export const startBreak = async (badge_code: string, break_type_id: string): Promise<StartBreakResponse> => {
+export const startBreak = async (badge_code: string, break_type_id: string, plate_id?: string): Promise<StartBreakResponse> => {
     const response = await api.post<StartBreakResponse>('/breaks/start', {
         badge_code,
         break_type_id,
+        plate_id,
     });
     return response.data;
 };
@@ -219,6 +220,59 @@ export const setEmployeeActive = async (id: string, active: boolean): Promise<Em
 export const getDashboardOverview = async (): Promise<DashboardOverview> => {
     const response = await api.get<DashboardOverview>('/dashboard/overview');
     return response.data;
+};
+
+// -- Companies --
+
+export interface Company {
+  id: string;
+  name: string;
+}
+
+export const createCompany = async (name: string): Promise<Company> => {
+  const response = await api.post('/companies', { name });
+  return response.data;
+};
+
+export const getMyCompany = async (): Promise<Company> => {
+  const response = await api.get('/companies/me');
+  return response.data;
+};
+
+export const updateCompany = async (id: string, name: string): Promise<Company> => {
+  const response = await api.put(`/companies/${id}`, { name });
+  return response.data;
+};
+
+// -- Plates --
+
+export interface OperationalPlate {
+  id: string;
+  company_id: string;
+  name: string;
+  code: string;
+  active: boolean;
+  created_at: string;
+}
+
+export const listPlates = async (): Promise<OperationalPlate[]> => {
+  const response = await api.get('/plates');
+  return response.data;
+};
+
+export const createPlate = async (name: string, allowedBreakTypeIds?: string[]): Promise<OperationalPlate> => {
+  const response = await api.post('/plates', { name, allowed_break_type_ids: allowedBreakTypeIds });
+  return response.data;
+};
+
+export const togglePlateActive = async (id: string, active: boolean): Promise<OperationalPlate> => {
+  const response = await api.patch(`/plates/${id}/active`, { active });
+  return response.data;
+};
+
+export const resolvePlate = async (code: string): Promise<OperationalPlate & { company_name: string }> => {
+  const response = await api.get(`/plates/resolve?code=${code}`);
+  return response.data;
 };
 
 export default api;

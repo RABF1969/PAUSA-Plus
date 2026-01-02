@@ -189,7 +189,7 @@ const Employees: React.FC = () => {
                   <tr key={emp.id} className={`group hover:bg-[var(--bg-accent)] transition-all ${!emp.active ? 'opacity-60' : ''}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className={`size-10 rounded-full flex items-center justify-center font-black text-sm ${emp.active ? 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400' : 'bg-[var(--bg-accent)] text-[var(--text-secondary)]'}`}>
+                        <div className={`size-10 rounded-full flex items-center justify-center font-bold text-sm ${emp.active ? 'bg-emerald-100/80 text-emerald-900 ring-1 ring-emerald-200' : 'bg-slate-200 text-slate-900'}`}>
                           {emp.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -200,7 +200,7 @@ const Employees: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-[var(--text-secondary)]">{emp.badge_code}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)] font-medium capitalize">{emp.role}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${emp.active ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400' : 'bg-[var(--bg-accent)] text-[var(--text-secondary)]'
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${emp.active ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-slate-200 text-slate-700 border border-slate-300'
                         }`}>
                         {emp.active ? 'Ativo' : 'Inativo'}
                       </span>

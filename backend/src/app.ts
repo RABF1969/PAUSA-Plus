@@ -1,12 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import healthRoutes from './routes/health.routes';
-import breaksRoutes from './routes/breaks.routes';
-import dashboardRoutes from './routes/dashboard.routes';
 import authRoutes from './routes/auth.routes';
+import companiesRoutes from './routes/companies.routes';
+import breaksRoutes from './routes/breaks.routes';
 import reportsRoutes from './routes/reports.routes';
 import employeesRoutes from './routes/employees.routes';
+import dashboardRoutes from './routes/dashboard.routes';
+import platesRoutes from './routes/plates.routes';
+import healthRoutes from './routes/health.routes';
 
 dotenv.config();
 
@@ -18,11 +20,13 @@ app.use(express.json());
 
 // Routes
 app.use('/health', healthRoutes);
-app.use('/breaks', breaksRoutes);
-app.use('/dashboard', dashboardRoutes);
 app.use('/auth', authRoutes);
+app.use('/companies', companiesRoutes);
+app.use('/breaks', breaksRoutes);
 app.use('/reports', reportsRoutes);
 app.use('/employees', employeesRoutes);
+app.use('/dashboard', dashboardRoutes);
+app.use('/plates', platesRoutes);
 
 // Root route
 app.get('/', (req, res) => {

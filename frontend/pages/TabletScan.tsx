@@ -1,6 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { listBreakTypes, startBreak, endBreak, getActiveBreakByBadge, BreakType } from '../services/api';
+import {
+  listBreakTypes,
+  startBreak,
+  endBreak,
+  getActiveBreakByBadge,
+  BreakType,
+} from '../services/api';
+import { getPlateContext, clearPlateContext } from '../utils/kioskContext';
 
 const TabletScan: React.FC = () => {
   const navigate = useNavigate();
@@ -8,9 +15,9 @@ const TabletScan: React.FC = () => {
   const badgeCodeFromLogin = (location.state as any)?.badgeCode;
 
   const [breakTypes, setBreakTypes] = useState<BreakType[]>([]);
-  const [selectedBreakType, setSelectedBreakType] = useState<string>('');
+  const [selectedBreakType, setSelectedBreakType] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState('');
   const [confirmation, setConfirmation] = useState<{
     type: 'start' | 'end';
     name: string;
@@ -20,52 +27,68 @@ const TabletScan: React.FC = () => {
 
   const isProcessingRef = useRef(false);
 
-  // Load break types on mount and every 30 seconds
+  // =========================
+  // Load break types
+  // =========================
   const loadBreakTypes = async () => {
     try {
-      const types = await listBreakTypes();
-      setBreakTypes(types);
-      if (types.length > 0 && !selectedBreakType) {
-        const firstAvailable = types.find(t => t.active_count < t.capacity) || types[0];
+      const allTypes = await listBreakTypes();
+      const plate = getPlateContext();
+
+      let filtered = allTypes;
+      if (plate?.allowed_break_types?.length) {
+        filtered = allTypes.filter(t =>
+          plate.allowed_break_types.includes(t.id)
+        );
+      }
+
+      setBreakTypes(filtered);
+
+      if (filtered.length && !selectedBreakType) {
+        const firstAvailable =
+          filtered.find(t => t.active_count < t.capacity) || filtered[0];
         setSelectedBreakType(firstAvailable.id);
       }
-    } catch (err: any) {
+    } catch {
       setError('Erro ao carregar configurações');
     }
   };
 
   useEffect(() => {
     loadBreakTypes();
-    const interval = setInterval(loadBreakTypes, 30000);
-    return () => clearInterval(interval);
+    const i = setInterval(loadBreakTypes, 30000);
+    return () => clearInterval(i);
   }, []);
 
-  // Handle Auto-start simulation (if coming from Login)
+  // Auto trigger if coming from login
   useEffect(() => {
-    if (badgeCodeFromLogin && selectedBreakType && !loading && !confirmation && !error) {
-      const timer = setTimeout(() => {
-        handleToggleAction(badgeCodeFromLogin);
-      }, 2000); // Wait 2s before auto-triggering
-      return () => clearTimeout(timer);
+    if (badgeCodeFromLogin && selectedBreakType && !confirmation && !loading) {
+      const t = setTimeout(
+        () => handleToggleAction(badgeCodeFromLogin),
+        2000
+      );
+      return () => clearTimeout(t);
     }
   }, [badgeCodeFromLogin, selectedBreakType]);
 
-  // Handle Auto-reset after 3s
+  // Auto reset overlays
   useEffect(() => {
     if (confirmation || error) {
-      const timer = setTimeout(() => {
+      const t = setTimeout(() => {
         setConfirmation(null);
         setError('');
-        // Clean navigation state if we came from login to allow fresh scans
         if (badgeCodeFromLogin) {
           navigate('/kiosk/scan', { replace: true, state: {} });
         }
       }, 3000);
-      return () => clearTimeout(timer);
+      return () => clearTimeout(t);
     }
   }, [confirmation, error]);
 
-  const handleToggleAction = async (badge_code: string) => {
+  // =========================
+  // Toggle logic
+  // =========================
+  const handleToggleAction = async (badge: string) => {
     if (isProcessingRef.current) return;
     if (!selectedBreakType) {
       setError('Selecione um tipo de pausa');
@@ -74,47 +97,41 @@ const TabletScan: React.FC = () => {
 
     isProcessingRef.current = true;
     setLoading(true);
-    setError('');
 
     try {
-      // Step A: Check Active Break
-      const activeBreak = await getActiveBreakByBadge(badge_code);
+      const active = await getActiveBreakByBadge(badge);
 
-      if (activeBreak) {
-        // Step B: End Break
-        const result = await endBreak({ break_id: activeBreak.id });
+      if (active) {
+        const result = await endBreak({ break_id: active.id });
         setConfirmation({
           type: 'end',
           name: result.employee_name,
-          duration: result.duration_minutes
+          duration: result.duration_minutes,
         });
       } else {
-        // Step C: Start Break
-        const result = await startBreak(badge_code, selectedBreakType);
+        const plate = getPlateContext();
+        const result = await startBreak(badge, selectedBreakType, plate?.id);
         setConfirmation({
           type: 'start',
           name: result.employee_name,
-          maxMinutes: result.max_minutes
+          maxMinutes: result.max_minutes,
         });
       }
     } catch (err: any) {
-      const msg = err.response?.data?.error || 'Erro na operação';
-      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      setError(err.response?.data?.error || 'Erro na operação');
     } finally {
       setLoading(false);
       isProcessingRef.current = false;
-      setTestBadgeCode(''); // Clear test field
+      setTestBadgeCode('');
     }
   };
 
+  // =========================
+  // Test Mode
+  // =========================
   const [testBadgeCode, setTestBadgeCode] = useState('');
-  const [isTestMode] = useState(() => {
-    try {
-      return !!((import.meta as any).env?.DEV && (import.meta as any).env?.VITE_KIOSK_TEST_MODE === 'true');
-    } catch {
-      return false;
-    }
-  });
+  const isTestMode =
+    (import.meta as any).env.DEV && (import.meta as any).env.VITE_KIOSK_TEST_MODE === 'true';
 
   const handleManualScan = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,91 +139,140 @@ const TabletScan: React.FC = () => {
     handleToggleAction(testBadgeCode.padStart(4, '0'));
   };
 
+  // =========================
+  // RENDER
+  // =========================
   return (
-    <div className="min-h-screen bg-[#0a0f0d] flex flex-col items-center justify-center p-8 text-white font-sans overflow-hidden">
-      <div className="max-w-xl w-full text-center space-y-12">
-        <header className="space-y-4">
-          <h1 className="text-4xl font-black tracking-tighter leading-none">ESCANEIE O QR CODE</h1>
-          <p className="text-emerald-500 font-bold uppercase tracking-[0.3em] text-[10px]">Modo Tablet Compartilhado</p>
-        </header>
-
-        {/* Break Selection */}
-        <div className="max-w-xs mx-auto w-full space-y-3">
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Selecione o tipo de pausa</label>
-          <select
-            value={selectedBreakType}
-            onChange={(e) => setSelectedBreakType(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold appearance-none transition-all focus:border-emerald-500/50 outline-none"
-            disabled={loading}
-          >
-            {breakTypes.map(t => (
-              <option key={t.id} value={t.id} className="bg-gray-900" disabled={t.active_count >= t.capacity}>
-                {t.name} ({t.active_count}/{t.capacity}) — {t.max_minutes}m
-              </option>
-            ))}
-          </select>
+    <>
+      {/* MAIN UI */}
+      <div className="min-h-screen bg-[#0a0f0d] flex flex-col items-center justify-center p-8 text-white font-sans overflow-hidden relative selection:bg-emerald-500/30">
+        
+        {/* Background Gradients */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-emerald-900/10 blur-[120px] rounded-full mix-blend-screen" />
+          <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-900/5 blur-[100px] rounded-full mix-blend-screen" />
         </div>
 
-        {/* Viewfinder */}
-        <div className="relative size-72 mx-auto">
-          <div className="absolute inset-0 border-[3px] border-emerald-500/10 rounded-[56px]"></div>
-          {/* Corners */}
-          <div className="absolute -top-1 -left-1 size-20 border-t-[10px] border-l-[10px] border-emerald-500 rounded-tl-[56px]"></div>
-          <div className="absolute -top-1 -right-1 size-20 border-t-[10px] border-r-[10px] border-emerald-500 rounded-tr-[56px]"></div>
-          <div className="absolute -bottom-1 -left-1 size-20 border-b-[10px] border-l-[10px] border-emerald-500 rounded-bl-[56px]"></div>
-          <div className="absolute -bottom-1 -right-1 size-20 border-b-[10px] border-r-[10px] border-emerald-500 rounded-br-[56px]"></div>
-
-          <div className="absolute inset-8 flex items-center justify-center opacity-10">
-            <span className="material-symbols-outlined text-[100px]">qr_code_scanner</span>
+        <div className="w-full max-w-lg flex flex-col items-center gap-8 relative z-10">
+          
+          {/* HEADER */}
+          <div className="text-center space-y-2">
+            <div className="flex items-center justify-center gap-2 text-emerald-500/80 mb-2">
+              <span className="material-symbols-outlined text-lg animate-pulse">wifi_tethering</span>
+              <span className="text-[10px] uppercase font-bold tracking-[0.2em]">Online</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white drop-shadow-lg">
+              ESCANEIE O QR CODE
+            </h1>
+            <p className="text-gray-400 font-medium tracking-wide text-sm md:text-base">
+              Modo Tablet Compartilhado
+            </p>
           </div>
 
-          {!confirmation && !error && (
-            <div className={`absolute w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_20px_emerald-500] scanner-line ${loading ? 'opacity-100' : 'opacity-40'}`}></div>
-          )}
-        </div>
-
-        {/* Scanning Indicator */}
-        <div className="flex justify-center h-8">
-          {loading ? (
-            <div className="flex items-center gap-3 px-6 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-              <div className="size-1.5 bg-emerald-500 rounded-full animate-ping"></div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Processando...</span>
-            </div>
-          ) : (
-            <p className="text-gray-600 text-[10px] font-bold uppercase tracking-widest animate-pulse">Aguardando leitura...</p>
-          )}
-        </div>
-
-        {/* Test UI */}
-        {isTestMode && (
-          <form onSubmit={handleManualScan} className="max-w-xs mx-auto w-full flex gap-2">
-            <input
-              type="text"
-              placeholder="Digite a matrícula"
-              value={testBadgeCode}
-              onChange={(e) => setTestBadgeCode(e.target.value)}
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs focus:border-emerald-500/50 outline-none"
-              disabled={loading}
-            />
-            <button
-              type="submit"
-              disabled={loading || !testBadgeCode}
-              className="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-20 text-white px-5 rounded-xl text-[10px] font-black uppercase tracking-widest"
+          {/* PAUSE SELECTOR */}
+          <div className="w-full relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <select
+              value={selectedBreakType}
+              onChange={(e) => setSelectedBreakType(e.target.value)}
+              className="w-full bg-[#131816] border border-white/10 text-white p-4 rounded-xl appearance-none outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all text-lg font-bold text-center cursor-pointer relative z-10 shadow-xl"
             >
-              Simular
-            </button>
-          </form>
-        )}
+              <option value="" disabled>Selecione o tipo de pausa...</option>
+              {breakTypes.map((type) => (
+                <option 
+                  key={type.id} 
+                  value={type.id} 
+                  disabled={type.active_count >= type.capacity}
+                >
+                  {type.name} {type.capacity ? `(${type.active_count}/${type.capacity})` : ''} - {type.duration_minutes} min
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+              <span className="material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
 
-        <button
-          onClick={() => navigate('/kiosk/login')}
-          className="text-gray-500 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 mx-auto pt-8"
-        >
-          <span className="material-symbols-outlined text-sm">close</span> Sair do Sistema
-        </button>
+          {/* SCANNER GRID */}
+          <div className="relative w-full aspect-square max-w-[320px] mx-auto group">
+            {/* Animated Border */}
+            <div className="absolute inset-0 border-[3px] border-emerald-500/30 rounded-3xl" />
+            
+            {/* Corner Pieces */}
+            <div className={`absolute top-0 left-0 w-12 h-12 border-l-[6px] border-t-[6px] rounded-tl-3xl transition-colors duration-300 ${error ? 'border-red-500' : 'border-emerald-400'}`} />
+            <div className={`absolute top-0 right-0 w-12 h-12 border-r-[6px] border-t-[6px] rounded-tr-3xl transition-colors duration-300 ${error ? 'border-red-500' : 'border-emerald-400'}`} />
+            <div className={`absolute bottom-0 left-0 w-12 h-12 border-l-[6px] border-b-[6px] rounded-bl-3xl transition-colors duration-300 ${error ? 'border-red-500' : 'border-emerald-400'}`} />
+            <div className={`absolute bottom-0 right-0 w-12 h-12 border-r-[6px] border-b-[6px] rounded-br-3xl transition-colors duration-300 ${error ? 'border-red-500' : 'border-emerald-400'}`} />
+
+            {/* Inner Content */}
+            <div className="absolute inset-4 rounded-2xl bg-[#0f1412] flex items-center justify-center overflow-hidden border border-white/5 shadow-inner">
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
+              
+              {/* Scan Line Animation */}
+              {!loading && !confirmation && !error && (
+                <div className="absolute w-full h-[2px] bg-emerald-500/80 shadow-[0_0_20px_rgba(16,185,129,0.8)] animate-[scan_2s_ease-in-out_infinite]" />
+              )}
+
+              {/* Central Icon */}
+              <div className="z-10 flex flex-col items-center gap-4 text-gray-600 group-hover:text-gray-500 transition-colors">
+                 {loading ? (
+                    <span className="material-symbols-outlined text-6xl animate-spin text-emerald-500">sync</span>
+                 ) : (
+                    <span className="material-symbols-outlined text-7xl font-light opacity-50">qr_code_scanner</span>
+                 )}
+              </div>
+            </div>
+          </div>
+
+          {/* STATUS TEXT */}
+          <div className="text-center space-y-2">
+            <p className="text-emerald-400/80 text-sm font-bold uppercase tracking-[0.2em] animate-pulse">
+              {loading ? 'PROCESSANDO...' : 'AGUARDANDO LEITURA...'}
+            </p>
+            {error && <p className="text-red-400 text-xs font-bold animate-in fade-in slide-in-from-bottom-2">{error}</p>}
+          </div>
+
+          {/* TEST MODE (Developer Tools) */}
+          {isTestMode && (
+             <div className="w-full p-4 rounded-xl border border-dashed border-gray-800 bg-[#0d1210]/50 backdrop-blur-sm mt-4">
+                <p className="text-[9px] text-gray-500 uppercase font-bold tracking-widest mb-3 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"/>
+                  Developer Console
+                </p>
+                <form onSubmit={handleManualScan} className="flex gap-2">
+                    <input
+                      value={testBadgeCode}
+                      onChange={e => setTestBadgeCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Matrícula simulada"
+                      className="flex-1 bg-black/50 border border-gray-800 text-gray-300 px-3 py-2 rounded text-xs font-mono focus:border-gray-600 focus:outline-none transition-colors placeholder:text-gray-700"
+                    />
+                    <button className="px-4 py-2 rounded border border-gray-700 hover:bg-gray-800 text-gray-400 hover:text-white text-xs font-bold uppercase transition-all">
+                      Simular
+                    </button>
+                </form>
+             </div>
+          )}
+
+          {/* FOOTER ACTIONS */}
+          <div className="pt-8">
+            <button
+              onClick={() => {
+                if (confirm('Deseja realmente desconectar este ponto operacional?')) {
+                  clearPlateContext();
+                  navigate('/kiosk', { replace: true });
+                }
+              }}
+              className="group flex items-center gap-2 text-gray-600 hover:text-red-400 transition-colors text-[10px] uppercase font-black tracking-[0.2em] py-2 px-4 rounded-full hover:bg-white/5"
+            >
+              <span className="material-symbols-outlined text-sm group-hover:-rotate-180 transition-transform duration-500">swap_horiz</span>
+              Trocar Placa
+            </button>
+          </div>
+
+        </div>
       </div>
 
-      {/* Confirmation Overlay */}
+      {/* OVERLAY: CONFIRMATION */}
       {confirmation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0f0d]/95 backdrop-blur-3xl animate-in fade-in duration-300">
           <div className="text-center space-y-10 animate-in zoom-in duration-500 max-w-sm px-6">
@@ -217,7 +283,7 @@ const TabletScan: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <h2 className={`text-6xl font-black tracking-tighter ${confirmation.type === 'start' ? 'text-emerald-400' : 'text-orange-400'}`}>
+              <h2 className={`text-5xl font-black tracking-tighter ${confirmation.type === 'start' ? 'text-emerald-400' : 'text-orange-400'}`}>
                 {confirmation.type === 'start' ? 'BOM DESCANSO!' : 'BOM TRABALHO!'}
               </h2>
               <div className="bg-white/5 p-6 rounded-[32px] border border-white/5">
@@ -233,8 +299,8 @@ const TabletScan: React.FC = () => {
         </div>
       )}
 
-      {/* Error Overlay */}
-      {error && (
+      {/* OVERLAY: ERROR */}
+      {error && !confirmation && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-red-950/95 backdrop-blur-3xl animate-in fade-in duration-300">
           <div className="text-center space-y-8 animate-in bounce-in duration-500 max-w-sm px-6">
             <div className="mx-auto size-24 rounded-full bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] flex items-center justify-center">
@@ -248,7 +314,7 @@ const TabletScan: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

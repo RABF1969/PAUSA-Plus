@@ -4,7 +4,7 @@ import { AuthRequest } from '../middleware/auth.middleware';
 
 export const startBreakController = async (req: AuthRequest, res: Response) => {
     try {
-        const { badge_code, break_type_id } = req.body;
+        const { badge_code, break_type_id, plate_id } = req.body;
         const companyId = req.user?.company_id;
 
         if (!companyId) throw new Error('Company ID not found in token');
@@ -13,7 +13,7 @@ export const startBreakController = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ error: 'badge_code and break_type_id are required' });
         }
 
-        const result = await startBreak({ badge_code, break_type_id });
+        const result = await startBreak({ badge_code, break_type_id, plate_id });
 
         return res.status(201).json(result);
     } catch (error: any) {

@@ -22,7 +22,6 @@
   --border-primary: #2d373a;
   --emerald-600: #10b981;
   --emerald-500: #34d399;
-  --badge-bg: transparent;
 }
 
 body {
@@ -68,19 +67,8 @@ body {
 }
 
 /* Ensure icons have no background or border artifacts */
-/* Ensure icons have no background or border artifacts in both modes */
 .material-symbols-outlined {
   background: none !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  /* Prevent focus rings on icons themselves */
-  --tw-ring-color: transparent !important;
-}
-
-/* Global SVG fixes */
-svg {
-  background: transparent !important;
   border: none !important;
   outline: none !important;
   box-shadow: none !important;

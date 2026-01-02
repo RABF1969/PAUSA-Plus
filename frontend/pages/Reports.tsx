@@ -184,7 +184,7 @@ const Reports: React.FC = () => {
                                     <tr key={item.id} className="hover:bg-[var(--bg-accent)] transition-colors group">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="size-8 rounded-full bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-black text-xs">
+                                                <div className="size-8 rounded-full bg-slate-200 dark:bg-emerald-950/30 flex items-center justify-center text-slate-900 dark:text-emerald-400 font-bold text-xs ring-1 ring-slate-300 dark:ring-0">
                                                     {item.employee_name.charAt(0).toUpperCase()}
                                                 </div>
                                                 <span className="text-sm font-bold text-[var(--text-primary)]">{item.employee_name}</span>
