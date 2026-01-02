@@ -59,11 +59,24 @@ body {
   background: #3d4a4e;
 }
 
-/* Global Transition */
-* {
-  transition-property: background-color, border-color, color, fill, stroke;
+/* Global Transition - Exclude icons and SVG to prevent visual artifacts */
+*:not(svg):not(.material-symbols-outlined):not(svg *) {
+  transition-property: background-color, border-color, color;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 300ms;
+}
+
+/* Ensure icons have no background or border artifacts */
+.material-symbols-outlined {
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+svg,
+svg * {
+  transition: none;
 }
 
 /* Keep cards sharp */

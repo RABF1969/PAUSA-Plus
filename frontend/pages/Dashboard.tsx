@@ -144,10 +144,18 @@ const Dashboard: React.FC = () => {
         {stats.map((stat, i) => (
           <div key={i} className="bg-[var(--bg-secondary)] p-5 rounded-2xl border border-[var(--border-primary)] shadow-sm hover:shadow-md transition-all group">
             <div className="flex justify-between items-start mb-4">
-              <div className={`p-2 bg-${stat.color}-50 dark:bg-${stat.color}-950/30 rounded-xl text-${stat.color}-600 dark:text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
+              <div className={`p-2 group-hover:scale-110 transition-transform ${stat.color === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' :
+                  stat.color === 'orange' ? 'text-orange-600 dark:text-orange-400' :
+                    stat.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
+                      'text-emerald-600 dark:text-emerald-400'
+                }`}>
                 <span className="material-symbols-outlined">{stat.icon}</span>
               </div>
-              <span className={`text-[10px] font-black uppercase tracking-wider bg-${stat.color}-50 dark:bg-${stat.color}-950/30 text-${stat.color}-600 dark:text-${stat.color}-400 px-2 py-1 rounded-lg`}>
+              <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg ${stat.color === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400' :
+                  stat.color === 'orange' ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400' :
+                    stat.color === 'blue' ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400' :
+                      'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
+                }`}>
                 {stat.trend}
               </span>
             </div>
