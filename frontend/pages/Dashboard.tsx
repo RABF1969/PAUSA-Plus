@@ -105,7 +105,10 @@ const Dashboard: React.FC = () => {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/30 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 dark:border dark:border-emerald-800 shadow-sm"
+              style={{ backgroundColor: 'var(--badge-bg, #ffffff)', border: 'none' }}
+            >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -145,17 +148,20 @@ const Dashboard: React.FC = () => {
           <div key={i} className="bg-[var(--bg-secondary)] p-5 rounded-2xl border border-[var(--border-primary)] shadow-sm hover:shadow-md transition-all group">
             <div className="flex justify-between items-start mb-4">
               <div className={`p-2 group-hover:scale-110 transition-transform ${stat.color === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' :
-                  stat.color === 'orange' ? 'text-orange-600 dark:text-orange-400' :
-                    stat.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
-                      'text-emerald-600 dark:text-emerald-400'
+                stat.color === 'orange' ? 'text-orange-600 dark:text-orange-400' :
+                  stat.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
+                    'text-emerald-600 dark:text-emerald-400'
                 }`}>
                 <span className="material-symbols-outlined">{stat.icon}</span>
               </div>
-              <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg ${stat.color === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400' :
-                  stat.color === 'orange' ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400' :
-                    stat.color === 'blue' ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400' :
-                      'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
-                }`}>
+              <span
+                className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg shadow-sm ${stat.color === 'emerald' ? 'text-emerald-600 dark:bg-emerald-950/30 dark:border dark:border-emerald-900/50 dark:text-emerald-400' :
+                  stat.color === 'orange' ? 'text-orange-600 dark:bg-orange-950/30 dark:border dark:border-orange-900/50 dark:text-orange-400' :
+                    stat.color === 'blue' ? 'text-blue-600 dark:bg-blue-950/30 dark:border dark:border-blue-900/50 dark:text-blue-400' :
+                      'text-emerald-600 dark:bg-emerald-950/30 dark:border dark:border-emerald-900/50 dark:text-emerald-400'
+                  }`}
+                style={{ backgroundColor: 'var(--badge-bg, #ffffff)', border: 'none' }}
+              >
                 {stat.trend}
               </span>
             </div>
@@ -168,18 +174,21 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Active Breaks Container */}
         <div className="xl:col-span-2 bg-[var(--bg-secondary)] rounded-[32px] border border-[var(--border-primary)] shadow-sm overflow-hidden flex flex-col">
-          <div className="p-6 border-b border-[var(--border-primary)] flex justify-between items-center bg-[var(--bg-accent)]">
+          <div className="p-4 md:p-6 border-b border-[var(--border-primary)] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-[var(--bg-accent)]">
             <h2 className="text-xl font-black text-[var(--text-primary)] flex items-center gap-2">
               <span className="material-symbols-outlined text-emerald-500">timer</span>
               Pausas Ativas
             </h2>
-            <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-black uppercase">
+            <span
+              className="px-3 py-1 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 dark:border dark:border-emerald-800 rounded-full text-xs font-black uppercase shadow-sm whitespace-nowrap"
+              style={{ backgroundColor: 'var(--badge-bg, #ffffff)', border: 'none' }}
+            >
               {activeBreaks.length} {activeBreaks.length === 1 ? 'COLABORADOR' : 'COLABORADORES'}
             </span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[600px] md:min-w-0">
               <thead>
                 <tr className="bg-[var(--bg-primary)]">
                   <th className="px-6 py-4 text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">Colaborador</th>
@@ -192,10 +201,10 @@ const Dashboard: React.FC = () => {
               <tbody className="divide-y divide-[var(--border-primary)] text-[var(--text-primary)]">
                 {activeBreaks.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-20 text-center">
-                      <div className="flex flex-col items-center gap-2 opacity-40">
+                    <td colSpan={5} className="px-4 py-16 text-center">
+                      <div className="flex flex-col items-center gap-3 opacity-40 max-w-[200px] mx-auto text-center">
                         <span className="material-symbols-outlined text-4xl">coffee</span>
-                        <p className="font-bold text-sm tracking-tight">Nenhuma pausa ativa no momento</p>
+                        <p className="font-bold text-sm tracking-tight text-wrap">Nenhuma pausa ativa no momento</p>
                       </div>
                     </td>
                   </tr>

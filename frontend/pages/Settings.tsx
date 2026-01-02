@@ -90,7 +90,7 @@ const Settings: React.FC = () => {
 
       <div className="bg-[var(--bg-secondary)] rounded-[32px] border border-[var(--border-primary)] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left min-w-[800px] lg:min-w-0">
             <thead>
               <tr className="bg-[var(--bg-primary)] border-b border-[var(--border-primary)]">
                 <th className="px-8 py-6 text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest">Pausa</th>
@@ -108,7 +108,10 @@ const Settings: React.FC = () => {
                     <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-widest">UUID: {type.id.slice(0, 8)}...</p>
                   </td>
                   <td className="px-8 py-6 text-center">
-                    <span className="bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 px-3 py-1 rounded-full text-xs font-black border border-orange-100 dark:border-orange-900/50">
+                    <span
+                      className="inline-block whitespace-nowrap px-3 py-1 rounded-full text-xs font-black text-orange-600 dark:text-orange-400 dark:border dark:border-orange-900/50 shadow-sm"
+                      style={{ backgroundColor: 'var(--badge-bg, #ffffff)' }}
+                    >
                       {type.max_minutes} min
                     </span>
                   </td>
