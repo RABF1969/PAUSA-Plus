@@ -107,10 +107,10 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-500">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-500">
+      <header className="flex flex-col gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-200 border border-transparent dark:border-emerald-500/20">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -118,16 +118,18 @@ const Dashboard: React.FC = () => {
               </span>
               AO VIVO
             </span>
-            <p className="text-[var(--text-secondary)] text-sm font-medium">PAUSA+ • {currentTime.toLocaleTimeString()}</p>
+            <p className="text-[var(--text-secondary)] text-xs md:text-sm font-medium">PAUSA+ • {currentTime.toLocaleTimeString()}</p>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)]">Visão Geral Operacional</h1>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-[var(--text-primary)]">Visão Geral Operacional</h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => navigate('/reports')}
             className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl text-sm font-bold text-[var(--text-primary)] hover:bg-[var(--bg-accent)] transition-all active:scale-95 shadow-sm"
           >
-            <span className="material-symbols-outlined text-[20px]">bar_chart</span> Relatórios
+            <span className="material-symbols-outlined text-[20px]">bar_chart</span>
+            <span className="hidden sm:inline">Relatórios</span>
+            <span className="sm:hidden">Relat.</span>
           </button>
           <button
             onClick={() => fetchDashboardData(true)}

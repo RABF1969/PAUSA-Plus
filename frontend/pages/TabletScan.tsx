@@ -184,7 +184,7 @@ const TabletScan: React.FC = () => {
   return (
     <>
       {/* MAIN UI */}
-      <div className="min-h-screen bg-[#0a0f0d] flex flex-col items-center justify-center p-8 text-white font-sans overflow-hidden relative selection:bg-emerald-500/30">
+      <div className="min-h-screen bg-[#0a0f0d] flex flex-col items-center justify-center p-4 md:p-8 text-white font-sans overflow-hidden relative selection:bg-emerald-500/30">
         
         {/* Background Gradients */}
         <div className="fixed inset-0 pointer-events-none">
@@ -192,7 +192,7 @@ const TabletScan: React.FC = () => {
           <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-900/5 blur-[100px] rounded-full mix-blend-screen" />
         </div>
 
-        <div className="w-full max-w-lg flex flex-col items-center gap-8 relative z-10">
+        <div className="w-full max-w-lg flex flex-col items-center gap-6 md:gap-8 relative z-10">
           
           {/* HEADER */}
           <div className="text-center space-y-2">
@@ -200,10 +200,10 @@ const TabletScan: React.FC = () => {
               <span className="material-symbols-outlined text-lg animate-pulse">wifi_tethering</span>
               <span className="text-[10px] uppercase font-bold tracking-[0.2em]">Online</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white drop-shadow-lg">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter text-white drop-shadow-lg">
               ESCANEIE O QR CODE
             </h1>
-            <p className="text-gray-400 font-medium tracking-wide text-sm md:text-base">
+            <p className="text-gray-400 font-medium tracking-wide text-xs md:text-sm">
               Modo Tablet Compartilhado
             </p>
           </div>
@@ -233,7 +233,7 @@ const TabletScan: React.FC = () => {
           </div>
 
           {/* SCANNER GRID */}
-          <div className="relative w-full aspect-square max-w-[320px] mx-auto group">
+          <div className="relative w-full aspect-square max-w-[280px] sm:max-w-[320px] mx-auto group">
             {/* Animated Border */}
             <div className="absolute inset-0 border-[3px] border-emerald-500/30 rounded-3xl" />
             

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '../services/api';
 import ThemeToggle from './ThemeToggle';
@@ -7,6 +7,7 @@ import ThemeToggle from './ThemeToggle';
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Get real user data from localStorage
   const userJson = localStorage.getItem('user');
@@ -17,6 +18,10 @@ const Sidebar: React.FC = () => {
     navigate('/login');
   };
 
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   const menuItems = [
     { path: '/', icon: 'dashboard', label: 'Dashboard' },
     { path: '/employees', icon: 'groups', label: 'Funcionários' },
@@ -25,8 +30,8 @@ const Sidebar: React.FC = () => {
     { path: '/settings', icon: 'settings', label: 'Configurações' },
   ];
 
-  return (
-    <aside className="w-64 bg-[var(--bg-secondary)] border-r border-[var(--border-primary)] h-screen sticky top-0 flex flex-col p-4">
+  const SidebarContent = () => (
+    <>
       <div className="flex items-center gap-3 px-2 mb-10">
         <div className="size-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
           <span className="material-symbols-outlined filled">timer</span>
@@ -48,6 +53,7 @@ const Sidebar: React.FC = () => {
             <Link
               key={item.path}
               to={item.path}
+              onClick={closeMobileMenu}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 border-l-4 ${isActive
                 ? 'bg-emerald-600/10 dark:bg-emerald-500/15 border-emerald-600 dark:border-emerald-500 ring-1 ring-emerald-600/10 dark:ring-emerald-500/20 shadow-sm shadow-emerald-500/5'
                 : 'border-transparent hover:bg-slate-100 dark:hover:bg-white/5 group'
@@ -74,7 +80,7 @@ const Sidebar: React.FC = () => {
         {/* Prototype Switcher */}
         <div className="grid grid-cols-2 gap-2">
           <button
-            onClick={() => window.location.hash = '#/'}
+            onClick={() => { window.location.hash = '#/'; closeMobileMenu(); }}
             className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${!location.pathname.startsWith('/kiosk')
               ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg shadow-black/10'
               : 'bg-[var(--bg-primary)] text-slate-500 dark:text-slate-400 hover:bg-[var(--border-primary)]'
@@ -83,7 +89,7 @@ const Sidebar: React.FC = () => {
             Web Admin
           </button>
           <button
-            onClick={() => window.location.hash = '#/kiosk/login'}
+            onClick={() => { window.location.hash = '#/kiosk/login'; closeMobileMenu(); }}
             className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${location.pathname.startsWith('/kiosk')
               ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/10'
               : 'bg-[var(--bg-primary)] text-slate-500 dark:text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/20'
@@ -100,13 +106,13 @@ const Sidebar: React.FC = () => {
               className="size-10 rounded-full border-2 border-[var(--bg-secondary)] shadow-sm"
               alt="User"
             />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-black truncate text-slate-900 dark:text-white/90 leading-tight">{user.name}</p>
               <p className="text-[10px] text-slate-500 dark:text-white/50 truncate uppercase tracking-tighter font-bold">{user.role}</p>
             </div>
             <button
               onClick={handleLogout}
-              className="ml-auto flex size-9 items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all border border-transparent hover:border-red-100 dark:hover:border-red-900/50"
+              className="flex size-9 items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all border border-transparent hover:border-red-100 dark:hover:border-red-900/50"
               title="Sair"
             >
               <span className="material-symbols-outlined text-lg">logout</span>
@@ -114,7 +120,48 @@ const Sidebar: React.FC = () => {
           </div>
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile Menu Toggle Button */}
+      <button
+        onClick={() => setIsMobileMenuOpen(true)}
+        className="md:hidden fixed top-4 right-4 z-40 size-12 bg-emerald-500 text-white rounded-xl shadow-lg flex items-center justify-center hover:bg-emerald-600 transition-all active:scale-95"
+        aria-label="Abrir menu"
+      >
+        <span className="material-symbols-outlined">menu</span>
+      </button>
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-in fade-in duration-200"
+          onClick={closeMobileMenu}
+        />
+      )}
+
+      {/* Sidebar - Desktop (always visible) / Mobile (drawer) */}
+      <aside className={`
+        fixed md:sticky top-0 left-0 z-50 h-screen
+        w-64 bg-[var(--bg-secondary)] border-r border-[var(--border-primary)]
+        flex flex-col p-4
+        transition-transform duration-300 ease-in-out
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        {/* Mobile Close Button */}
+        <button
+          onClick={closeMobileMenu}
+          className="md:hidden absolute top-4 right-4 size-8 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+          aria-label="Fechar menu"
+        >
+          <span className="material-symbols-outlined text-xl">close</span>
+        </button>
+
+        <SidebarContent />
+      </aside>
+    </>
   );
 };
 

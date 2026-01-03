@@ -112,10 +112,10 @@ const MasterDashboard: React.FC = () => {
 
     return (
         <MasterLayout>
-            <main className="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
-                <header className="mb-8">
-                    <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">Visão Geral</h1>
-                    <p className="text-[var(--text-secondary)]">Acompanhe métricas em tempo real</p>
+            <main className="max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in duration-500">
+                <header className="mb-6 md:mb-8">
+                    <h1 className="text-2xl md:text-3xl font-black text-[var(--text-primary)] tracking-tight">Visão Geral</h1>
+                    <p className="text-sm md:text-base text-[var(--text-secondary)]">Acompanhe métricas em tempo real</p>
                 </header>
 
                 {/* KPI Cards */}
@@ -166,18 +166,18 @@ const MasterDashboard: React.FC = () => {
 
                 {/* Filters & Table */}
                 <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl shadow-soft overflow-hidden">
-                    <div className="p-6 border-b border-[var(--border-primary)] flex flex-col sm:flex-row gap-4 justify-between items-center bg-[var(--bg-primary)]/50">
+                    <div className="p-4 md:p-6 border-b border-[var(--border-primary)] flex flex-col gap-4">
                         <h2 className="text-lg font-black text-[var(--text-primary)]">Todas as Empresas</h2>
-                        <div className="flex gap-3 w-full sm:w-auto">
+                        <div className="flex flex-col sm:flex-row gap-3">
                             <input 
                                 type="text" 
                                 placeholder="Buscar empresa..." 
-                                className="px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl text-sm focus:outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 w-full sm:w-64 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
+                                className="px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl text-sm focus:outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 w-full sm:flex-1 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
                                 value={filter}
                                 onChange={(e) => setFilter(e.target.value)}
                             />
                             <select 
-                                className="px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl text-sm focus:outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 text-[var(--text-primary)]"
+                                className="px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl text-sm focus:outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 w-full sm:w-auto text-[var(--text-primary)]"
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
