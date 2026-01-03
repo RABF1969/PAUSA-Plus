@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getBreakHistory, HistoryItem, listBreakTypes, BreakType } from '../services/api';
+import { getApiErrorMessage, logErrorInDev } from '../utils/getApiErrorMessage';
 
 const Reports: React.FC = () => {
     const [data, setData] = useState<HistoryItem[]>([]);
@@ -28,7 +29,9 @@ const Reports: React.FC = () => {
             setTotal(response.total);
             setTotalPages(response.totalPages);
         } catch (err: any) {
-            setError(err.response?.data?.error || 'Erro ao carregar histórico');
+            const { message } = getApiErrorMessage(err);
+            setError(message);
+            logErrorInDev(err, 'Reports - Load');
         } finally {
             setLoading(false);
         }
