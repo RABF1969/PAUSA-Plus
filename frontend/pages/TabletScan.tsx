@@ -314,7 +314,7 @@ const TabletScan: React.FC = () => {
       {/* OVERLAY: CONFIRMATION */}
       {confirmation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0f0d]/95 backdrop-blur-3xl animate-in fade-in duration-300">
-          <div className="text-center space-y-10 animate-in zoom-in duration-500 max-w-sm px-6">
+          <div className="text-center space-y-10 animate-in zoom-in-95 duration-500 max-w-sm px-6">
             <div className={`mx-auto size-32 rounded-full flex items-center justify-center ${confirmation.type === 'start' ? 'bg-emerald-500 shadow-[0_0_50px_rgba(16,185,129,0.4)]' : 'bg-orange-500 shadow-[0_0_50px_rgba(249,115,22,0.4)]'}`}>
               <span className="material-symbols-outlined text-6xl text-white">
                 {confirmation.type === 'start' ? 'play_arrow' : 'stop'}
