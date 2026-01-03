@@ -49,14 +49,22 @@ const Sidebar: React.FC = () => {
               key={item.path}
               to={item.path}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 border-l-4 ${isActive
-                ? 'bg-emerald-600/10 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-200 font-black border-emerald-600 dark:border-emerald-500 ring-1 ring-emerald-600/10 dark:ring-emerald-500/20 shadow-sm shadow-emerald-500/5'
-                : 'border-transparent text-slate-700 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-emerald-700 dark:hover:text-white group'
+                ? 'bg-emerald-600/10 dark:bg-emerald-500/15 border-emerald-600 dark:border-emerald-500 ring-1 ring-emerald-600/10 dark:ring-emerald-500/20 shadow-sm shadow-emerald-500/5'
+                : 'border-transparent hover:bg-slate-100 dark:hover:bg-white/5 group'
                 }`}
             >
-              <span className={`material-symbols-outlined ${isActive ? 'filled text-emerald-700 dark:text-emerald-200' : 'text-slate-500 dark:text-white/40 group-hover:text-emerald-600 dark:group-hover:text-white'}`}>
+              <span className={`material-symbols-outlined ${isActive 
+                  ? 'filled text-emerald-800 dark:text-emerald-200' 
+                  : 'text-slate-500 dark:text-white/40 group-hover:text-emerald-700 dark:group-hover:text-white'
+              }`}>
                 {item.icon}
               </span>
-              <span className="text-sm font-bold tracking-tight">{item.label}</span>
+              <span className={`text-sm font-bold tracking-tight ${isActive 
+                  ? 'text-emerald-900 dark:text-emerald-100' 
+                  : 'text-slate-700 dark:text-white/70 group-hover:text-emerald-800 dark:group-hover:text-white'
+              }`}>
+                  {item.label}
+              </span>
             </Link>
           );
         })}

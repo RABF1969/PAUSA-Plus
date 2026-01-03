@@ -75,36 +75,36 @@ const MasterPlansList: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {plans.map((plan) => (
-                        <div key={plan.id} className={`bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow ${plan.is_active ? 'border-slate-200' : 'border-red-100 bg-red-50/10'}`}>
+                        <div key={plan.id} className={`bg-[var(--bg-secondary)] rounded-xl shadow-soft border p-6 hover:shadow-lg transition-all ${plan.is_active ? 'border-[var(--border-primary)]' : 'border-red-500/20 bg-red-500/5'}`}>
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900">{plan.name}</h3>
-                                    <span className="text-xs font-mono text-slate-400 uppercase">{plan.code}</span>
+                                    <h3 className="text-lg font-black text-[var(--text-primary)]">{plan.name}</h3>
+                                    <span className="text-xs font-mono text-[var(--text-secondary)] uppercase font-bold tracking-widest">{plan.code}</span>
                                 </div>
-                                <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${plan.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                                <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${plan.is_active ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-600 dark:text-red-400'}`}>
                                     {plan.is_active ? 'Ativo' : 'Inativo'}
                                 </span>
                             </div>
                             
-                            <div className="text-3xl font-bold text-slate-900 mb-6">
+                            <div className="text-3xl font-black text-[var(--text-primary)] mb-6 tracking-tight">
                                 {formatPrice(plan.price_cents)}
-                                <span className="text-sm font-normal text-slate-500">/{plan.billing_cycle === 'monthly' ? 'mês' : 'ano'}</span>
+                                <span className="text-sm font-bold text-[var(--text-secondary)] ml-1">/{plan.billing_cycle === 'monthly' ? 'mês' : 'ano'}</span>
                             </div>
 
                             <div className="space-y-3 mb-6">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500">Funcionários</span>
-                                    <span className="font-medium text-slate-900">{plan.employee_limit}</span>
+                                    <span className="text-[var(--text-secondary)] font-medium">Funcionários</span>
+                                    <span className="font-black text-[var(--text-primary)]">{plan.employee_limit}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500">Placas</span>
-                                    <span className="font-medium text-slate-900">{plan.plate_limit}</span>
+                                    <span className="text-[var(--text-secondary)] font-medium">Placas</span>
+                                    <span className="font-black text-[var(--text-primary)]">{plan.plate_limit}</span>
                                 </div>
                             </div>
 
                             <Link 
                                 to={`/alfabiz/plans/${plan.id}/edit`}
-                                className="block w-full text-center py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium transition-colors"
+                                className="block w-full text-center py-2.5 rounded-xl border border-[var(--border-primary)] text-[var(--text-primary)] hover:bg-[var(--bg-primary)] hover:border-blue-500/30 font-black uppercase tracking-widest text-xs transition-all"
                             >
                                 Editar Plano
                             </Link>
