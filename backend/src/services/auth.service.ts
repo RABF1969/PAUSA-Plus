@@ -57,7 +57,10 @@ export const login = async (email: string, password: string) => {
     const token = generateToken(payload);
 
     return {
-        user: payload,
+        user: {
+            ...payload,
+            must_change_password: user.must_change_password || false
+        },
         token
     };
 };

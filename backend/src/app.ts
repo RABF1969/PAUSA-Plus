@@ -8,6 +8,7 @@ import reportsRoutes from './routes/reports.routes';
 import employeesRoutes from './routes/employees.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import platesRoutes from './routes/plates.routes';
+import usersRoutes from './routes/users.routes';
 import { masterRouter } from './routes/master.routes';
 import healthRoutes from './routes/health.routes';
 
@@ -29,6 +30,7 @@ app.use('/reports', reportsRoutes);
 app.use('/employees', employeesRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/plates', platesRoutes);
+app.use('/users', usersRoutes);
 
 // Root route
 app.get('/', (req, res) => {
