@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { endBreak, StartBreakResponse } from '../services/api';
+import { getApiErrorMessage, logErrorInDev } from '../utils/getApiErrorMessage';
 
 const TabletTimer: React.FC = () => {
   const navigate = useNavigate();
@@ -62,7 +63,9 @@ const TabletTimer: React.FC = () => {
       alert(`Pausa encerrada! Duração: ${result.duration_minutes} min${result.status === 'exceeded' ? ' (excedeu o limite)' : ''}`);
       navigate('/kiosk/login');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao encerrar pausa');
+      const { message } = getApiErrorMessage(err);
+      setError(message);
+      logErrorInDev(err, 'TabletTimer - End Break');
       setLoading(false);
     }
   };
