@@ -266,6 +266,9 @@ const Dashboard: React.FC = () => {
 
         {/* Recent Activity Section */}
         <div className="flex flex-col gap-4">
+          {/* Plan Overview Card */}
+          <PlanOverviewCard />
+          
           <h3 className="text-lg font-extrabold text-[var(--text-primary)] flex items-center gap-2">
             <span className="material-symbols-outlined text-[var(--text-secondary)]">history</span> Atividade Recente
           </h3>
