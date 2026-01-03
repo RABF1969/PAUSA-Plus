@@ -12,6 +12,10 @@ import Login from './pages/Login';
 import Reports from './pages/Reports';
 import Sidebar from './components/Sidebar';
 import { ThemeProvider } from './contexts/ThemeContext';
+import MasterLogin from './pages/master/MasterLogin';
+import MasterCompaniesList from './pages/master/MasterCompaniesList';
+import MasterCompanyForm from './pages/master/MasterCompanyForm';
+import MasterRouteGuard from './components/MasterRouteGuard';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -70,6 +74,15 @@ const App: React.FC = () => {
           <Route path="/kiosk/login" element={<TabletLogin />} />
           <Route path="/kiosk/scan" element={<TabletScan />} />
           <Route path="/kiosk/active" element={<TabletTimer />} />
+
+          {/* Master Layer Routes (Internal Alfabiz) */}
+          <Route path="/alfabiz/login" element={<MasterLogin />} />
+          <Route path="/alfabiz" element={<MasterRouteGuard />}>
+              <Route path="companies" element={<MasterCompaniesList />} />
+              <Route path="companies/new" element={<MasterCompanyForm />} />
+              <Route path="companies/:id/edit" element={<MasterCompanyForm />} />
+              <Route index element={<Navigate to="companies" replace />} />
+          </Route>
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />

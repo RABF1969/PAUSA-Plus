@@ -39,6 +39,24 @@ export const createEmployee = async (data: {
     role: string;
     badge_code?: string;
 }) => {
+    // 1. Check Company Limits
+    const { data: company, error: companyError } = await supabase
+        .from('companies')
+        .select('max_employees, employees(count)')
+        .eq('id', data.company_id)
+        .single();
+
+    if (companyError || !company) {
+        throw new Error('Empresa não encontrada ou erro ao verificar limites.');
+    }
+
+    const currentCount = company.employees?.[0]?.count || 0;
+    const maxEmployees = company.max_employees || 10;
+
+    if (currentCount >= maxEmployees) {
+        throw new Error(`Limite de funcionários atingido (${currentCount}/${maxEmployees}). Atualize seu plano.`);
+    }
+
     let badge_code = data.badge_code;
     if (!badge_code) {
         badge_code = await generateNextBadgeCode(data.company_id);

@@ -14,12 +14,15 @@ export const startBreak = async ({ badge_code, break_type_id, plate_id }: StartB
         .eq('id', break_type_id)
         .single();
 
+
+
     const { data: employee, error: employeeError } = await supabase
         .from('employees')
-        .select('id, name, active, company_id')
+        .select('id, name, active, company_id, companies(status)')
         .eq('badge_code', badge_code)
         .eq('company_id', breakType.company_id)
         .single();
+
 
     if (employeeError || !employee) {
         throw new Error('Employee not found');
@@ -65,7 +68,52 @@ export const startBreak = async ({ badge_code, break_type_id, plate_id }: StartB
         throw new Error('Employee already has an active break');
     }
 
-    // 4. Start new break
+    // 4. Validate Company Status
+    const company = (employee as any).companies;
+    if (company && company.status !== 'active') {
+        const error = new Error('Empresa suspensa ou inativa. Contate o suporte.');
+        (error as any).status = 403;
+        throw error;
+    }
+
+    // 5. Validate Plate (if provided)
+    if (plate_id) {
+        const { data: plate, error: plateError } = await supabase
+            .from('operational_plates')
+            .select('id, active, company_id')
+            .eq('id', plate_id)
+            .single();
+
+        if (plateError || !plate) {
+             throw new Error('Ponto operacional inválido');
+        }
+
+        if (!plate.active) {
+            throw new Error('Este ponto operacional está inativo');
+        }
+
+        if (plate.company_id !== employee.company_id) {
+            throw new Error('Ponto operacional não pertence à empresa do colaborador');
+        }
+
+        // 5.1 Check if Plate allows this Break Type
+        // We need to check the pivot table `plate_break_types`
+        const { data: allowed, error: allowedError } = await supabase
+            .from('plate_break_types')
+            .select('plate_id')
+            .eq('plate_id', plate_id)
+            .eq('break_type_id', break_type_id)
+            .single();
+
+        // If no record found AND we are enforcing strict rules...
+        // Assuming strict rules: If the pivot table is used, we must check it.
+        // If the query returns nothing, the break type is NOT allowed for this plate.
+        if (!allowed) {
+            throw new Error('Este tipo de pausa não é permitido neste ponto operacional');
+        }
+    }
+
+    // 6. Start new break
     const { data: newBreak, error: createError } = await supabase
         .from('break_events')
         .insert({
@@ -75,6 +123,7 @@ export const startBreak = async ({ badge_code, break_type_id, plate_id }: StartB
             status: 'active',
             plate_id: plate_id || null
         })
+
         .select()
         .single();
 

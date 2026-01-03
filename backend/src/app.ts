@@ -8,6 +8,7 @@ import reportsRoutes from './routes/reports.routes';
 import employeesRoutes from './routes/employees.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import platesRoutes from './routes/plates.routes';
+import { masterRouter } from './routes/master.routes';
 import healthRoutes from './routes/health.routes';
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(express.json());
 
 // Routes
 app.use('/health', healthRoutes);
+app.use('/master', masterRouter); // Master Control Layer
 app.use('/auth', authRoutes);
 app.use('/companies', companiesRoutes);
 app.use('/breaks', breaksRoutes);
@@ -40,3 +42,5 @@ if (require.main === module) {
 }
 
 export default app;
+// Force restart
+
