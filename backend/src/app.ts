@@ -41,6 +41,10 @@ if (require.main === module) {
     });
 }
 
+// Global Error Handler (must be after all routes)
+import { errorHandler } from './middleware/errorHandler.middleware';
+app.use(errorHandler);
+
 export default app;
 // Force restart
 

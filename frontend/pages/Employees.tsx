@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { listEmployees, createEmployee, updateEmployee, setEmployeeActive, Employee } from '../services/api';
+import { getApiErrorMessage, logErrorInDev } from '../utils/getApiErrorMessage';
 
 const Employees: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -31,7 +32,9 @@ const Employees: React.FC = () => {
       const data = await listEmployees();
       setEmployees(data);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao carregar funcionários');
+      const { message } = getApiErrorMessage(err);
+      setError(message);
+      logErrorInDev(err, 'Employees - Load');
     } finally {
       setLoading(false);
     }
@@ -74,7 +77,9 @@ const Employees: React.FC = () => {
       await fetchEmployees();
       setIsModalOpen(false);
     } catch (err: any) {
-      setFormError(err.response?.data?.error || 'Erro ao cadastrar funcionário');
+      const { message } = getApiErrorMessage(err);
+      setFormError(message);
+      logErrorInDev(err, 'Employees - Create');
     } finally {
       setFormLoading(false);
     }
@@ -92,7 +97,9 @@ const Employees: React.FC = () => {
       await fetchEmployees();
       setIsEditModalOpen(false);
     } catch (err: any) {
-      setFormError(err.response?.data?.error || 'Erro ao atualizar funcionário');
+      const { message } = getApiErrorMessage(err);
+      setFormError(message);
+      logErrorInDev(err, 'Employees - Update');
     } finally {
       setFormLoading(false);
     }
@@ -108,7 +115,9 @@ const Employees: React.FC = () => {
       await setEmployeeActive(emp.id, !emp.active);
       await fetchEmployees();
     } catch (err: any) {
-      alert(err.response?.data?.error || `Erro ao ${action} funcionário`);
+      const { message } = getApiErrorMessage(err);
+      alert(message);
+      logErrorInDev(err, `Employees - ${action}`);
     }
   };
 

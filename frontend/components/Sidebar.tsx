@@ -49,10 +49,10 @@ const Sidebar: React.FC = () => {
               to={item.path}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 border-l-4 ${isActive
                 ? 'bg-emerald-600/10 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-bold border-emerald-600 dark:border-emerald-500/20 ring-1 ring-emerald-600/15 dark:ring-emerald-500/20'
-                : 'border-transparent text-slate-700 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-emerald-700 dark:hover:text-white'
+                : 'border-transparent text-slate-800 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-emerald-700 dark:hover:text-white'
                 }`}
             >
-              <span className={`material-symbols-outlined ${isActive ? 'filled text-emerald-800 dark:text-emerald-200' : 'text-slate-500 dark:text-white/50 group-hover:text-emerald-700 dark:group-hover:text-white'}`}>
+              <span className={`material-symbols-outlined ${isActive ? 'filled text-emerald-800 dark:text-emerald-200' : 'text-slate-600 dark:text-white/50 group-hover:text-emerald-700 dark:group-hover:text-white'}`}>
                 {item.icon}
               </span>
               <span className="text-sm">{item.label}</span>

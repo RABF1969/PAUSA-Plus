@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDashboardOverview, getActiveBreaks, endBreak, DashboardOverview, ActiveBreak } from '../services/api';
+import { getApiErrorMessage, logErrorInDev } from '../utils/getApiErrorMessage';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -29,7 +30,9 @@ const Dashboard: React.FC = () => {
       setOverview(overviewData);
       setActiveBreaks(breaksData);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao carregar dados do dashboard');
+      const { message } = getApiErrorMessage(err);
+      setError(message);
+      logErrorInDev(err, 'Dashboard - Load');
       console.error(err);
     } finally {
       setLoading(false);
@@ -48,7 +51,9 @@ const Dashboard: React.FC = () => {
       await endBreak({ break_id: id });
       fetchDashboardData();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Erro ao finalizar pausa');
+      const { message } = getApiErrorMessage(err);
+      alert(message);
+      logErrorInDev(err, 'Dashboard - End Break');
     }
   };
 

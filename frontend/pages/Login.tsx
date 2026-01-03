@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/api';
+import { getApiErrorMessage, logErrorInDev } from '../utils/getApiErrorMessage';
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -18,8 +19,9 @@ const Login: React.FC = () => {
             await login(email, password);
             navigate('/');
         } catch (err: any) {
-            setError(err.response?.data?.error || 'Erro ao realizar login');
-            console.error(err);
+            const { message } = getApiErrorMessage(err);
+            setError(message);
+            logErrorInDev(err, 'Login');
         } finally {
             setLoading(false);
         }

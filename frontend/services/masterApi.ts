@@ -34,4 +34,14 @@ masterApi.interceptors.response.use(
   }
 );
 
+// Plans Methods
+// Plans Methods
+export const getPlans = () => masterApi.get('/master/plans');
+export const createPlan = (data: any) => masterApi.post('/master/plans', data);
+export const updatePlan = (id: string, data: any) => masterApi.patch(`/master/plans/${id}`, data);
+
+export const getCompanies = () => masterApi.get('/master/companies');
+export const createCompany = (data: any) => masterApi.post('/master/companies', data);
+export const updateCompany = (id: string, data: any) => masterApi.patch(`/master/companies/${id}`, data);
+
 export default masterApi;

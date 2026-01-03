@@ -8,7 +8,7 @@ export class MasterController {
   
   async createCompany(req: Request, res: Response) {
     try {
-      const { name, plan, status, max_employees, max_plates } = req.body;
+      const { name, plan_id, status, max_employees, max_plates } = req.body;
 
       if (!name) {
         return res.status(400).json({ error: 'Name is required' });
@@ -18,7 +18,7 @@ export class MasterController {
       
       const company = await masterService.createCompany({
         name,
-        plan,
+        plan_id,
         status,
         max_employees,
         max_plates
@@ -46,7 +46,7 @@ export class MasterController {
       const updates = req.body;
 
       // Filter allowed updates
-      const allowedKeys = ['name', 'plan', 'status', 'max_employees', 'max_plates'];
+      const allowedKeys = ['name', 'plan_id', 'status', 'max_employees', 'max_plates'];
       const filteredUpdates: any = {};
       
       for (const key of allowedKeys) {

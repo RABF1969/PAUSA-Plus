@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { CompanyGuardService } from './CompanyGuardService';
 
 interface StartBreakParams {
     badge_code: string;
@@ -68,13 +69,8 @@ export const startBreak = async ({ badge_code, break_type_id, plate_id }: StartB
         throw new Error('Employee already has an active break');
     }
 
-    // 4. Validate Company Status
-    const company = (employee as any).companies;
-    if (company && company.status !== 'active') {
-        const error = new Error('Empresa suspensa ou inativa. Contate o suporte.');
-        (error as any).status = 403;
-        throw error;
-    }
+    // 4. Validate Company Access (centralized guard)
+    await CompanyGuardService.validateCompanyAccess(breakType.company_id, 'START_BREAK');
 
     // 5. Validate Plate (if provided)
     if (plate_id) {

@@ -8,6 +8,7 @@ import {
   BreakType,
 } from '../services/api';
 import { getPlateContext, clearPlateContext } from '../utils/kioskContext';
+import { getApiErrorMessage, logErrorInDev } from '../utils/getApiErrorMessage';
 
 const TabletScan: React.FC = () => {
   const navigate = useNavigate();
@@ -118,7 +119,9 @@ const TabletScan: React.FC = () => {
         });
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro na operação');
+      const { message } = getApiErrorMessage(err);
+      setError(message);
+      logErrorInDev(err, 'TabletScan - Start Break');
     } finally {
       setLoading(false);
       isProcessingRef.current = false;

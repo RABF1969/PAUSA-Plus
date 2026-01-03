@@ -27,4 +27,11 @@ masterRouter.get('/companies', masterController.listCompanies);
  */
 masterRouter.patch('/companies/:id', masterController.updateCompany);
 
+// Plans Routes
+import { PlansController } from '../controllers/PlansController';
+
+masterRouter.get('/plans', PlansController.list);
+masterRouter.post('/plans', PlansController.create);
+masterRouter.patch('/plans/:id', PlansController.update);
+
 export { masterRouter };

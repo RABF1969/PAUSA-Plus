@@ -1,15 +1,21 @@
-
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import masterApi from '../../services/masterApi';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import masterApi, { getPlans, createCompany, getCompanies } from '../../services/masterApi';
 import MasterLayout from '../../components/layouts/MasterLayout';
+import { getApiErrorMessage, logErrorInDev } from '../../utils/getApiErrorMessage';
 
 interface CompanyFormData {
     name: string;
     status: 'active' | 'suspended';
-    plan: 'trial' | 'basic' | 'pro' | 'enterprise';
-    max_employees: number;
-    max_plates: number;
+    plan_id: string; // Updated to be ID
+    max_employees: number | ''; // Allow empty for override clear
+    max_plates: number | ''; 
+}
+
+interface Plan {
+    id: string;
+    name: string;
+    price_cents: number;
 }
 
 const MasterCompanyForm: React.FC = () => {
@@ -20,39 +26,52 @@ const MasterCompanyForm: React.FC = () => {
     const [formData, setFormData] = useState<CompanyFormData>({
         name: '',
         status: 'active',
-        plan: 'basic',
-        max_employees: 10,
-        max_plates: 2
+        plan_id: '',
+        max_employees: '', // Default to standard inheritance (no override)
+        max_plates: ''
     });
+    const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
-        if (isEdit) {
-            fetchCompany();
-        }
+        loadData();
     }, [id]);
 
-    const fetchCompany = async () => {
+    const loadData = async () => {
         setFetching(true);
         try {
-            const response = await masterApi.get('/master/companies');
-            const found = response.data.find((c: any) => c.id === id);
-            
-            if (found) {
-                setFormData({
-                    name: found.name,
-                    status: found.status,
-                    plan: found.plan,
-                    max_employees: found.max_employees,
-                    max_plates: found.max_plates
-                });
+            // 1. Fetch Plans
+            const plansRes = await getPlans();
+            const activePlans = plansRes.data.filter((p: any) => p.is_active);
+            setPlans(activePlans);
+
+            // 2. Fetch Company if Edit
+            if (isEdit) {
+                const response = await getCompanies();
+                const found = response.data.find((c: any) => c.id === id);
+                
+                if (found) {
+                    setFormData({
+                        name: found.name,
+                        status: found.status,
+                        plan_id: found.plan_id || '',
+                        max_employees: found.max_employees || '', // Using empty string to denote no override in UI
+                        max_plates: found.max_plates || ''
+                    });
+                } else {
+                    setError('Empresa não encontrada.');
+                }
             } else {
-                setError('Empresa não encontrada.');
+                 // Set default plan to first available or specific one
+                 if (activePlans.length > 0) {
+                     const defaultPlan = activePlans.find((p:any) => p.code === 'trial') || activePlans[0];
+                     setFormData(prev => ({ ...prev, plan_id: defaultPlan.id }));
+                 }
             }
         } catch (err: any) {
-            setError('Erro ao carregar dados da empresa.');
+            setError('Erro ao carregar dados.');
             console.error(err);
         } finally {
             setFetching(false);
@@ -65,18 +84,28 @@ const MasterCompanyForm: React.FC = () => {
         setError('');
 
         try {
-            if (formData.max_employees < 1 || formData.max_plates < 1) {
-                throw new Error('Limites devem ser maiores que 0');
-            }
+            const payload: any = {
+                name: formData.name,
+                status: formData.status,
+                plan_id: formData.plan_id,
+                // If user leaves empty in UI, send null to backend to clear override (inheriting from plan)
+                // However, our backend DTO might need updating to handle null explicity, or passing undefined.
+                // In MasterService updateCompany, we pass data directly.
+                // Ensure backend treats null as "set to null" not "ignore".
+                max_employees: formData.max_employees === '' ? null : Number(formData.max_employees),
+                max_plates: formData.max_plates === '' ? null : Number(formData.max_plates)
+            };
 
             if (isEdit) {
-                await masterApi.patch(`/master/companies/${id}`, formData);
+                await masterApi.patch(`/master/companies/${id}`, payload);
             } else {
-                await masterApi.post('/master/companies', formData);
+                await createCompany(payload);
             }
             navigate('/alfabiz/companies');
         } catch (err: any) {
-            setError(err.response?.data?.error || err.message || 'Erro ao salvar empresa.');
+            const { message } = getApiErrorMessage(err);
+            setError(message);
+            logErrorInDev(err, 'MasterCompanyForm - Save');
         } finally {
             setLoading(false);
         }
@@ -125,19 +154,43 @@ const MasterCompanyForm: React.FC = () => {
                             </div>
 
                             <div className="grid grid-cols-2 gap-6">
-                                {/* Plan */}
+                                {/* Plan Select */}
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Plano</label>
-                                    <select
-                                        value={formData.plan}
-                                        onChange={e => setFormData({ ...formData, plan: e.target.value as any })}
-                                        className="w-full border border-slate-300 rounded-lg px-4 py-2 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                    >
-                                        <option value="trial">Trial</option>
-                                        <option value="basic">Basic</option>
-                                        <option value="pro">Pro</option>
-                                        <option value="enterprise">Enterprise</option>
-                                    </select>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="block text-sm font-medium text-slate-700">Plano</label>
+                                        <Link 
+                                            to="/alfabiz/plans"
+                                            className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                                        >
+                                            Gerenciar Planos →
+                                        </Link>
+                                    </div>
+                                    {plans.length > 0 ? (
+                                        <select
+                                            value={formData.plan_id}
+                                            onChange={e => setFormData({ ...formData, plan_id: e.target.value })}
+                                            className="w-full border border-slate-300 rounded-lg px-4 py-2 bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                            required
+                                        >
+                                            <option value="" disabled>Selecione um plano...</option>
+                                            {plans.map(plan => (
+                                                <option key={plan.id} value={plan.id}>
+                                                    {plan.name} - {(plan.price_cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <div className="border border-yellow-200 bg-yellow-50 rounded-lg p-3">
+                                            <p className="text-sm text-yellow-800 mb-2">Nenhum plano cadastrado.</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => navigate('/alfabiz/plans/new')}
+                                                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                                            >
+                                                + Cadastrar Plano
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Status */}
@@ -154,33 +207,38 @@ const MasterCompanyForm: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-6">
-                                {/* Max Employees */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Limite Funcionários</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={formData.max_employees}
-                                        onChange={e => setFormData({ ...formData, max_employees: parseInt(e.target.value) })}
-                                        className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-900 bg-white"
-                                        required
-                                    />
-                                    <p className="text-xs text-slate-400 mt-1">Total de contas ativas permitidas.</p>
-                                </div>
+                            <div className="p-4 bg-slate-50 border border-slate-100 rounded-lg">
+                                <h3 className="text-sm font-bold text-slate-800 mb-2">Overrides (Opcional)</h3>
+                                <p className="text-xs text-slate-500 mb-4">
+                                    Preencha apenas se quiser <strong>substituir</strong> os limites padrão do Plano selecionado.
+                                    Deixe em branco para usar os limites do plano.
+                                </p>
+                                <div className="grid grid-cols-2 gap-6">
+                                    {/* Max Employees */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Limite Funcionários</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={formData.max_employees}
+                                            onChange={e => setFormData({ ...formData, max_employees: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                                            className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-900 bg-white placeholder-slate-400"
+                                            placeholder="Padrão do Plano"
+                                        />
+                                    </div>
 
-                                {/* Max Plates */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Limite Placas</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={formData.max_plates}
-                                        onChange={e => setFormData({ ...formData, max_plates: parseInt(e.target.value) })}
-                                        className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-900 bg-white"
-                                        required
-                                    />
-                                    <p className="text-xs text-slate-400 mt-1">Total de pontos operacionais físicos.</p>
+                                    {/* Max Plates */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Limite Placas</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={formData.max_plates}
+                                            onChange={e => setFormData({ ...formData, max_plates: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                                            className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-900 bg-white placeholder-slate-400"
+                                            placeholder="Padrão do Plano"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -209,3 +267,4 @@ const MasterCompanyForm: React.FC = () => {
 };
 
 export default MasterCompanyForm;
+

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { CompanyGuardService } from './CompanyGuardService';
 
 export interface OperationalPlate {
   id: string;
@@ -11,25 +12,10 @@ export interface OperationalPlate {
 
 export const PlatesService = {
   async createPlate(companyId: string, name: string, allowedBreakTypeIds?: string[]): Promise<OperationalPlate> {
-    // 1. Check Company Limits
-    const { data: company, error: companyError } = await supabase
-        .from('companies')
-        .select('max_plates, operational_plates(count)')
-        .eq('id', companyId)
-        .single();
+    // 1. Validate Company Access (centralized guard with limit check)
+    await CompanyGuardService.validateCompanyAccess(companyId, 'CREATE_PLATE');
 
-    if (companyError || !company) {
-        throw new Error('Empresa não encontrada ou erro ao verificar limites.');
-    }
-
-    const currentCount = company.operational_plates?.[0]?.count || 0;
-    const maxPlates = company.max_plates || 2;
-
-    if (currentCount >= maxPlates) {
-        throw new Error(`Limite de placas atingido (${currentCount}/${maxPlates}). Atualize seu plano.`);
-    }
-
-    // Generate a simple code like PLACA-XXXX
+    // 2. Generate a simple code like PLACA-XXXX
     const { count, error: countError } = await supabase
       .from('operational_plates')
       .select('id', { count: 'exact', head: true })
