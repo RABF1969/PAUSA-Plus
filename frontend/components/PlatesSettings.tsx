@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { OperationalPlate, listPlates, createPlate, togglePlateActive, listBreakTypes, BreakType } from '../services/api';
 import MultiSelect from './MultiSelect';
+import PrintPlateModal from './PrintPlateModal';
 
 const PlatesSettings: React.FC = () => {
   const [plates, setPlates] = useState<OperationalPlate[]>([]);
@@ -11,6 +12,7 @@ const PlatesSettings: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPlateName, setNewPlateName] = useState('');
   const [createdPlate, setCreatedPlate] = useState<OperationalPlate | null>(null);
+  const [printingPlate, setPrintingPlate] = useState<OperationalPlate | null>(null);
 
   useEffect(() => {
     loadPlates();
@@ -104,16 +106,25 @@ const PlatesSettings: React.FC = () => {
               <div className="size-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500">
                 <span className="material-symbols-outlined">qr_code_2</span>
               </div>
-              <button
-                onClick={() => handleToggle(plate)}
-                className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
-                  plate.active 
-                  ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' 
-                  : 'bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400'
-                }`}
-              >
-                {plate.active ? 'Ativa' : 'Inativa'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPrintingPlate(plate)}
+                  className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all flex items-center justify-center"
+                  title="Imprimir"
+                >
+                  <span className="material-symbols-outlined text-sm">print</span>
+                </button>
+                <button
+                  onClick={() => handleToggle(plate)}
+                  className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
+                    plate.active 
+                    ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' 
+                    : 'bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400'
+                  }`}
+                >
+                  {plate.active ? 'Ativa' : 'Inativa'}
+                </button>
+              </div>
             </div>
             <h3 className="font-black text-lg text-[var(--text-primary)] mb-1">{plate.name}</h3>
             <p className="text-xs font-mono text-[var(--text-secondary)] bg-[var(--bg-primary)] inline-block px-2 py-1 rounded-md border border-[var(--border-primary)]">
@@ -204,6 +215,13 @@ const PlatesSettings: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {printingPlate && (
+        <PrintPlateModal
+          plate={printingPlate}
+          onClose={() => setPrintingPlate(null)}
+        />
       )}
     </div>
   );

@@ -1,3 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,6 +39,7 @@ body {
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   transition: color 0.3s ease;
+  vertical-align: middle;
 }
 
 .filled {
@@ -83,4 +88,95 @@ svg * {
 .card {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-primary);
+}
+
+@layer utilities {
+  .animate-in {
+    animation-duration: 200ms;
+    animation-fill-mode: forwards;
+    opacity: 0;
+  }
+  
+  .fade-in {
+    animation-name: fadeIn;
+  }
+  
+  .slide-in-from-bottom-4 {
+    animation-name: slideInFromBottom;
+  }
+
+  .zoom-in-95 {
+    animation-name: zoomIn;
+  }
+  
+  .slide-in-from-top-2 {
+    animation-name: slideInFromTop2;
+  }
+
+  .shadow-soft {
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(1rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideInFromTop2 {
+  from { transform: translateY(-0.5rem); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Print Styles */
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  #print-area, #print-area * {
+    visibility: visible;
+  }
+  
+  #print-area {
+    position: fixed !important;
+    left: 50% !important;
+    top: 20% !important;
+    transform: translateX(-50%) !important;
+    background: white !important;
+    color: black !important;
+    border: 2px solid black !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    width: 300px !important;
+    height: auto !important;
+    display: flex !important;
+    z-index: 9999;
+  }
+
+  /* Reset any dark mode or background colors for print */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Ensure QR code is sharp */
+  canvas {
+    image-rendering: pixelated;
+  }
 }
