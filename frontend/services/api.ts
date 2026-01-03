@@ -275,4 +275,10 @@ export const resolvePlate = async (code: string): Promise<OperationalPlate & { c
   return response.data;
 };
 
+// Company Overview
+export const getCompanyOverview = async () => {
+  const response = await api.get('/companies/overview');
+  return response.data;
+};
+
 export default api;

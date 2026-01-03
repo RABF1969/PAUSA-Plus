@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDashboardOverview, getActiveBreaks, endBreak, DashboardOverview, ActiveBreak } from '../services/api';
 import { getApiErrorMessage, logErrorInDev } from '../utils/getApiErrorMessage';
+import PlanOverviewCard from '../components/PlanOverviewCard';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
