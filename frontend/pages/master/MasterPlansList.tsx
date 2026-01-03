@@ -54,28 +54,6 @@ const MasterPlansList: React.FC = () => {
 
     return (
         <MasterLayout>
-            {/* Header */}
-            <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">Alfabiz Control</h1>
-                    <span className="px-2 py-1 bg-slate-100 rounded text-xs text-slate-500 font-mono">/plans</span>
-                </div>
-                <div className="flex items-center gap-4">
-                     <Link 
-                        to="/alfabiz/companies"
-                        className="text-sm font-medium text-slate-600 hover:text-slate-900"
-                    >
-                        Empresas
-                    </Link>
-                    <div className="w-px h-4 bg-slate-300"></div>
-                     <Link 
-                        to="/alfabiz/plans"
-                        className="text-sm font-medium text-blue-600"
-                    >
-                        Planos
-                    </Link>
-                </div>
-            </header>
 
             {/* Content */}
             <main className="max-w-7xl mx-auto p-8">

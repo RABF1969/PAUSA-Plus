@@ -27,6 +27,12 @@ masterRouter.get('/companies', masterController.listCompanies);
  */
 masterRouter.patch('/companies/:id', masterController.updateCompany);
 
+/**
+ * @route GET /master/overview
+ * Dashboard Overview Data
+ */
+masterRouter.get('/overview', masterController.getDashboardOverview);
+
 // Plans Routes
 import { PlansController } from '../controllers/PlansController';
 

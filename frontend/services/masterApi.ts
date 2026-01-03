@@ -44,4 +44,6 @@ export const getCompanies = () => masterApi.get('/master/companies');
 export const createCompany = (data: any) => masterApi.post('/master/companies', data);
 export const updateCompany = (id: string, data: any) => masterApi.patch(`/master/companies/${id}`, data);
 
+export const getDashboardOverview = () => masterApi.get('/master/overview');
+
 export default masterApi;

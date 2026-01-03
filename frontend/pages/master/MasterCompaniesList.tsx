@@ -36,11 +36,6 @@ const MasterCompaniesList: React.FC = () => {
         }
     };
 
-    const handleLogout = () => {
-        sessionStorage.removeItem('alfabiz_master_token');
-        navigate('/alfabiz/login');
-    };
-
     if (loading) return (
         <MasterLayout>
             <div className="p-8 text-center text-slate-500">Carregando...</div>
@@ -49,19 +44,6 @@ const MasterCompaniesList: React.FC = () => {
 
     return (
         <MasterLayout>
-            {/* Header */}
-            <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">Alfabiz Control</h1>
-                    <span className="px-2 py-1 bg-slate-100 rounded text-xs text-slate-500 font-mono">/companies</span>
-                </div>
-                <button 
-                    onClick={handleLogout}
-                    className="text-sm text-red-600 hover:text-red-800 font-medium"
-                >
-                    Sair
-                </button>
-            </header>
 
             {/* Content */}
             <main className="max-w-7xl mx-auto p-8">

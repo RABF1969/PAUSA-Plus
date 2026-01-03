@@ -19,6 +19,7 @@ import MasterCompaniesList from './pages/master/MasterCompaniesList';
 import MasterCompanyForm from './pages/master/MasterCompanyForm';
 import MasterPlansList from './pages/master/MasterPlansList';
 import MasterPlanForm from './pages/master/MasterPlanForm';
+import MasterDashboard from './pages/master/MasterDashboard';
 import MasterRouteGuard from './components/MasterRouteGuard';
 import GlobalFooter from './components/GlobalFooter';
 
@@ -116,7 +117,7 @@ const App: React.FC = () => {
               <Route path="plans/new" element={<MasterPlanForm />} />
               <Route path="plans/:id/edit" element={<MasterPlanForm />} />
               
-              <Route index element={<Navigate to="companies" replace />} />
+              <Route index element={<MasterDashboard />} />
           </Route>
 
           {/* Fallback */}

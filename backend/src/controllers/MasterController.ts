@@ -62,4 +62,14 @@ export class MasterController {
       return res.status(500).json({ error: error.message });
     }
   }
+
+  async getDashboardOverview(req: Request, res: Response) {
+      try {
+          const data = await masterService.getDashboardOverview();
+          return res.json(data);
+      } catch (error: any) {
+          console.error('Master Overview Error:', error);
+          return res.status(500).json({ error: error.message });
+      }
+  }
 }
