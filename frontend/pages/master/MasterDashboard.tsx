@@ -34,7 +34,12 @@ interface OverviewData {
 
 const MasterDashboard: React.FC = () => {
     const navigate = useNavigate();
-    const [data, setData] = useState<OverviewData | null>(null);
+    // Initialize with safe default structure to avoid undefined errors during render if loading is bypassed or errors occur
+    const [data, setData] = useState<OverviewData>({
+        totals: { companies_active: 0, companies_suspended: 0, companies_trial: 0, mrr: 0 },
+        alerts: { no_plan_count: 0, over_limit_count: 0 },
+        companies: []
+    });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [filter, setFilter] = useState('');
@@ -47,7 +52,13 @@ const MasterDashboard: React.FC = () => {
     const fetchData = async () => {
         try {
             const res = await getDashboardOverview();
-            setData(res);
+            // Ensure we handle nested data structure if backend wraps it
+            const payload = res.data || res; 
+            setData(payload || {
+                totals: { companies_active: 0, companies_suspended: 0, companies_trial: 0, mrr: 0 },
+                alerts: { no_plan_count: 0, over_limit_count: 0 },
+                companies: []
+            });
         } catch (err: any) {
             const { message } = getApiErrorMessage(err);
             setError(message);
@@ -68,11 +79,12 @@ const MasterDashboard: React.FC = () => {
     };
 
     const formatCurrency = (cents: number) => {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((cents || 0) / 100);
     };
 
-    const filteredCompanies = data?.companies.filter(comp => {
-        const matchesName = comp.name.toLowerCase().includes(filter.toLowerCase());
+    const companiesSafe = data?.companies || [];
+    const filteredCompanies = companiesSafe.filter(comp => {
+        const matchesName = (comp.name || '').toLowerCase().includes(filter.toLowerCase());
         const matchesStatus = statusFilter === 'all' || comp.status === statusFilter;
         return matchesName && matchesStatus;
     }) || [];
@@ -87,11 +99,12 @@ const MasterDashboard: React.FC = () => {
         );
     }
 
-    if (error || !data) {
+    if (error) {
         return (
             <MasterLayout>
                 <div className="p-8">
                     <div className="bg-red-50 p-4 rounded-lg text-red-600">Erro: {error}</div>
+                    <button onClick={fetchData} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Tentar novamente</button>
                 </div>
             </MasterLayout>
         );
@@ -109,22 +122,22 @@ const MasterDashboard: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Empresas Ativas</p>
-                        <p className="text-3xl font-black text-emerald-600">{data.totals.companies_active}</p>
+                        <p className="text-3xl font-black text-emerald-600">{data?.totals?.companies_active || 0}</p>
                     </div>
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">MRR Mensal</p>
-                        <p className="text-3xl font-black text-blue-600">{formatCurrency(data.totals.mrr)}</p>
+                        <p className="text-3xl font-black text-blue-600">{formatCurrency(data?.totals?.mrr || 0)}</p>
                     </div>
                      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Trial / Suspensas</p>
                         <div className="flex gap-4">
                             <div>
-                                <span className="text-2xl font-black text-slate-900">{data.totals.companies_trial}</span>
+                                <span className="text-2xl font-black text-slate-900">{data?.totals?.companies_trial || 0}</span>
                                 <span className="text-xs text-slate-500 ml-1">Trial</span>
                             </div>
                             <div className="w-px bg-slate-200"></div>
                             <div>
-                                <span className="text-2xl font-black text-red-600">{data.totals.companies_suspended}</span>
+                                <span className="text-2xl font-black text-red-600">{data?.totals?.companies_suspended || 0}</span>
                                 <span className="text-xs text-slate-500 ml-1">Susp.</span>
                             </div>
                         </div>
@@ -132,17 +145,17 @@ const MasterDashboard: React.FC = () => {
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Alertas</p>
                         <div className="flex gap-2">
-                             {data.alerts.over_limit_count > 0 && (
+                             {(data?.alerts?.over_limit_count || 0) > 0 && (
                                 <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">
-                                    {data.alerts.over_limit_count} Over Limit
+                                    {data?.alerts?.over_limit_count} Over Limit
                                 </span>
                              )}
-                             {data.alerts.no_plan_count > 0 && (
+                             {(data?.alerts?.no_plan_count || 0) > 0 && (
                                 <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-bold">
-                                    {data.alerts.no_plan_count} Sem Plano
+                                    {data?.alerts?.no_plan_count} Sem Plano
                                 </span>
                              )}
-                             {data.alerts.over_limit_count === 0 && data.alerts.no_plan_count === 0 && (
+                             {(data?.alerts?.over_limit_count || 0) === 0 && (data?.alerts?.no_plan_count || 0) === 0 && (
                                  <span className="text-emerald-600 text-sm font-bold flex items-center gap-1">
                                      <span className="material-symbols-outlined text-sm">check_circle</span> Tudo OK
                                  </span>

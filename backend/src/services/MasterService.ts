@@ -85,18 +85,44 @@ export class MasterService {
   /**
    * Get Master Dashboard Overview data
    */
+  /**
+   * Get Master Dashboard Overview data
+   */
   async getDashboardOverview() {
-    // Fetch all companies with their plans and counts
-    // Note: 'count' on foreign tables is supported by PostgREST if using appropriate syntax or views.
-    // Since we are using basic client, we might need a workaround if 'active_count' isn't maintained on companies table.
-    // For MVP/Robustness, we will fetch raw data and aggregate in JS or use available counters.
-    // Optimization: If dataset is large, move this to a Database View or RPC.
-    
-    const { data: companies, error } = await supabase
+    // 1. Fetch Companies with Plans
+    const { data: companies, error: companiesError } = await supabase
       .from('companies')
-      .select('*, plans(id, name, price_cents, employee_limit, plate_limit), employees(id), plates(id)');
+      .select('*, plans(id, name, price_cents, employee_limit, plate_limit)');
 
-    if (error) throw new Error(error.message);
+    if (companiesError) {
+        console.error('MasterService: Error fetching companies', companiesError); // Dev Log
+        throw new Error('Failed to fetch companies'); 
+    }
+
+    // 2. Fetch ALL Active Employees (id, company_id) to count manually
+    // We avoid foreign key join issues by fetching raw list.
+    // If dataset grows huge, this should be replaced by a RPC or View in Postgres.
+    const { data: employees, error: empError } = await supabase
+      .from('employees')
+      .select('id, company_id')
+      .eq('active', true);
+
+    if (empError) {
+         console.error('MasterService: Error fetching employees', empError);
+         // Don't crash, just assume 0
+    }
+
+    // 3. Fetch ALL Active Operational Plates (id, company_id)
+    // Table is 'operational_plates', NOT 'plates'
+    const { data: plates, error: platesError } = await supabase
+      .from('operational_plates')
+      .select('id, company_id')
+      .eq('active', true);
+
+    if (platesError) {
+         console.error('MasterService: Error fetching plates', platesError);
+         // Don't crash
+    }
 
     // Aggregations
     const totals = {
@@ -111,25 +137,24 @@ export class MasterService {
         over_limit_count: 0
     };
 
+    // Helper to count using the fetched arrays
+    const countByCompany = (dataset: any[], companyId: string) => 
+        dataset ? dataset.filter((d: any) => d.company_id === companyId).length : 0;
+
     const companiesWithUsage = companies.map((comp: any) => {
         // Status counts
         if (comp.status === 'active') totals.companies_active++;
         else if (comp.status === 'suspended') totals.companies_suspended++;
         else if (comp.status === 'trial') totals.companies_trial++;
 
-        // MRR (only for active companies with plans)
+        // MRR
         if (comp.status === 'active' && comp.plans?.price_cents) {
             totals.mrr += comp.plans.price_cents;
         }
 
-        // Usage calculation
-        // Filter out inactive employees/plates if we want "active usage". 
-        // Assuming getting all for now as limit applies to total registered usually, or active.
-        // Let's assume limits apply to Active. If 'employees' array contains all, we might count all.
-        // Ideally we should filter in the select, but let's count only active if we can check 'active' prop.
-        // Use raw array length for MVP (Total registered).
-        const employees_used = comp.employees?.length || 0;
-        const plates_used = comp.plates?.length || 0;
+        // Usage calculation (Manual aggregation)
+        const employees_used = countByCompany(employees || [], comp.id);
+        const plates_used = countByCompany(plates || [], comp.id);
         
         const employees_limit = comp.max_employees || comp.plans?.employee_limit || 0;
         const plates_limit = comp.max_plates || comp.plans?.plate_limit || 0;
@@ -150,12 +175,12 @@ export class MasterService {
             id: comp.id,
             name: comp.name,
             status: comp.status,
-            plan: comp.plans, // { name, ... }
+            plan: comp.plans,
             employees_used,
             employees_limit,
             plates_used,
             plates_limit,
-            over_limit: hasAlert // Flag for frontend highlighting
+            over_limit: hasAlert
         };
     });
 
