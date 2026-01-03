@@ -1,8 +1,23 @@
 import axios from 'axios';
 
+const getBaseUrl = () => {
+    let url = import.meta.env.VITE_API_URL;
+    if (!url) {
+        if (import.meta.env.PROD) {
+            console.warn('VITE_API_URL is missing in production! Defaulting to /');
+        }
+        return '/';
+    }
+    // Remove trailing slash if present to avoid double slashes
+    if (url.endsWith('/')) {
+        url = url.slice(0, -1);
+    }
+    return url;
+};
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
-    timeout: 10000,
+    baseURL: getBaseUrl(),
+    timeout: 15000, // Increased timeout for slow cold starts (Render)
     headers: {
         'Content-Type': 'application/json',
     },
