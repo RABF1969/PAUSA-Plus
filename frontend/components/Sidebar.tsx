@@ -32,7 +32,7 @@ const Sidebar: React.FC = () => {
           <span className="material-symbols-outlined filled">timer</span>
         </div>
         <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-[var(--text-primary)]">PAUSA+</h1>
+          <h1 className="text-xl font-extrabold tracking-tight text-slate-800 dark:text-white">PAUSA+</h1>
           <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Enterprise</p>
         </div>
       </div>
@@ -76,8 +76,8 @@ const Sidebar: React.FC = () => {
           <button
             onClick={() => window.location.hash = '#/'}
             className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${!location.pathname.startsWith('/kiosk')
-              ? 'bg-[var(--text-primary)] text-[var(--bg-secondary)] shadow-lg shadow-black/10'
-              : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:bg-[var(--border-primary)]'
+              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg shadow-black/10'
+              : 'bg-[var(--bg-primary)] text-slate-500 dark:text-slate-400 hover:bg-[var(--border-primary)]'
               }`}
           >
             Web Admin
@@ -86,7 +86,7 @@ const Sidebar: React.FC = () => {
             onClick={() => window.location.hash = '#/kiosk/login'}
             className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${location.pathname.startsWith('/kiosk')
               ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/10'
-              : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/20'
+              : 'bg-[var(--bg-primary)] text-slate-500 dark:text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/20'
               }`}
           >
             Kiosk
@@ -101,12 +101,12 @@ const Sidebar: React.FC = () => {
               alt="User"
             />
             <div className="min-w-0">
-              <p className="text-xs font-black truncate text-[var(--text-primary)] leading-tight">{user.name}</p>
-              <p className="text-[10px] text-[var(--text-secondary)] truncate uppercase tracking-tighter font-bold">{user.role}</p>
+              <p className="text-xs font-black truncate text-slate-900 dark:text-white/90 leading-tight">{user.name}</p>
+              <p className="text-[10px] text-slate-500 dark:text-white/50 truncate uppercase tracking-tighter font-bold">{user.role}</p>
             </div>
             <button
               onClick={handleLogout}
-              className="ml-auto flex size-9 items-center justify-center text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all border border-transparent hover:border-red-100 dark:hover:border-red-900/50"
+              className="ml-auto flex size-9 items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all border border-transparent hover:border-red-100 dark:hover:border-red-900/50"
               title="Sair"
             >
               <span className="material-symbols-outlined text-lg">logout</span>
