@@ -136,16 +136,16 @@ const TabletScan: React.FC = () => {
         const result = await endBreak({ break_id: active.id });
         setConfirmation({
           type: 'end',
-          name: result.employee_name,
-          duration: result.duration_minutes,
+          name: result.employee_name || 'Funcionário',
+          duration: result.duration_minutes || 0,
         });
       } else {
         const plate = getPlateContext();
         const result = await startBreak(badge, selectedBreakType, plate?.id);
         setConfirmation({
           type: 'start',
-          name: result.employee_name,
-          maxMinutes: result.max_minutes,
+          name: result.employee_name || 'Funcionário',
+          maxMinutes: result.max_minutes || 0,
         });
       }
     } catch (err: any) {
@@ -325,10 +325,10 @@ const TabletScan: React.FC = () => {
               <h2 className={`text-5xl font-black tracking-tighter ${confirmation.type === 'start' ? 'text-emerald-400' : 'text-orange-400'}`}>
                 {confirmation.type === 'start' ? 'BOM DESCANSO!' : 'BOM TRABALHO!'}
               </h2>
-              <div className="bg-white/5 p-6 rounded-[32px] border border-white/5">
-                <p className="text-2xl font-black text-white mb-1 uppercase tracking-tight">{confirmation.name}</p>
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
-                  {confirmation.type === 'start' ? `Limite: ${confirmation.maxMinutes} min` : `Duração: ${confirmation.duration} min`}
+              <div className="bg-white/10 p-6 rounded-[32px] border border-white/10 backdrop-blur-md">
+                <p className="text-2xl font-black text-white mb-2 uppercase tracking-tight">{confirmation.name ?? 'Funcionário'}</p>
+                <p className={`text-sm font-bold uppercase tracking-widest ${confirmation.type === 'start' ? 'text-emerald-300' : 'text-orange-300'}`}>
+                  {confirmation.type === 'start' ? `Limite: ${confirmation.maxMinutes ?? 0} min` : `Duração: ${confirmation.duration ?? 0} min`}
                 </p>
               </div>
             </div>
