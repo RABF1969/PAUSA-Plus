@@ -9,6 +9,8 @@ import TabletScan from './pages/TabletScan';
 import TabletTimer from './pages/TabletTimer';
 import KioskPlateScan from './pages/KioskPlateScan';
 import Login from './pages/Login';
+import Users from './pages/Users';
+import ChangePassword from './pages/ChangePassword';
 import Reports from './pages/Reports';
 import Sidebar from './components/Sidebar';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -18,16 +20,32 @@ import MasterCompanyForm from './pages/master/MasterCompanyForm';
 import MasterPlansList from './pages/master/MasterPlansList';
 import MasterPlanForm from './pages/master/MasterPlanForm';
 import MasterRouteGuard from './components/MasterRouteGuard';
+import GlobalFooter from './components/GlobalFooter';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = localStorage.getItem('token');
+  const mustChangePassword = localStorage.getItem('must_change_password') === 'true';
+
   if (!token) {
     return <Navigate to="/login" />;
   }
+
+  // If user must change password, block all routes except /change-password
+  // But we can't easily check current route here inside the route element itself easily without useLocation
+  // So we handle this logic:
+  // If must_change_password is true, and we try to access anything inside AdminLayout (which this wrapper protects),
+  // we should be careful. 
+  // Ideally, the checks should be:
+  // 1. Not logged in -> Login
+  // 2. Logged in + must change -> ChangePassword
+  // 3. Logged in + active -> Content
+  
+  if (mustChangePassword) {
+      return <Navigate to="/change-password" />;
+  }
+
   return <>{children}</>;
 };
-
-import GlobalFooter from './components/GlobalFooter';
 
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="flex min-h-screen bg-[var(--bg-primary)]">
@@ -48,11 +66,21 @@ const App: React.FC = () => {
         <Routes>
           {/* Auth Route */}
           <Route path="/login" element={<Login />} />
+          
+          {/* Change Password Route (Protected but isolated) */}
+          <Route path="/change-password" element={
+            localStorage.getItem('token') ? <ChangePassword /> : <Navigate to="/login" />
+          } />
 
           {/* Admin Routes (Protected) */}
           <Route path="/" element={
             <ProtectedRoute>
               <AdminLayout><Dashboard /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/users" element={
+            <ProtectedRoute>
+              <AdminLayout><Users /></AdminLayout>
             </ProtectedRoute>
           } />
           <Route path="/employees" element={

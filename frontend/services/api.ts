@@ -281,4 +281,25 @@ export const getCompanyOverview = async () => {
   return response.data;
 };
 
+// User Management
+export const listUsers = async () => {
+  const response = await api.get('/users');
+  return response.data;
+};
+
+export const createUser = async (data: { name: string; email: string; role: string }) => {
+  const response = await api.post('/users', data);
+  return response.data;
+};
+
+export const updateUser = async (id: string, data: { name?: string; role?: string; active?: boolean }) => {
+  const response = await api.patch(`/users/${id}`, data);
+  return response.data;
+};
+
+export const changePassword = async (currentPassword: string, newPassword: string) => {
+  const response = await api.post('/auth/change-password', { currentPassword, newPassword });
+  return response.data;
+};
+
 export default api;

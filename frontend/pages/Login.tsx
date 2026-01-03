@@ -16,8 +16,26 @@ const Login: React.FC = () => {
         setError('');
 
         try {
-            await login(email, password);
-            navigate('/');
+            const response = await login(email, password);
+            
+            // Store user and token
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('user', JSON.stringify(response.user));
+            
+            // Check for mandatory password change
+            const user = response.user as any;
+            if (user.must_change_password) {
+                localStorage.setItem('must_change_password', 'true');
+                navigate('/change-password');
+            } else {
+                localStorage.removeItem('must_change_password');
+                // Redirect based on role
+                if (user.role === 'master') {
+                    navigate('/master/companies');
+                } else {
+                    navigate('/');
+                }
+            }
         } catch (err: any) {
             const { message } = getApiErrorMessage(err);
             setError(message);

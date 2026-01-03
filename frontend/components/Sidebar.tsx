@@ -20,6 +20,7 @@ const Sidebar: React.FC = () => {
   const menuItems = [
     { path: '/', icon: 'dashboard', label: 'Dashboard' },
     { path: '/employees', icon: 'groups', label: 'Funcionários' },
+    ...(user.role === 'admin' ? [{ path: '/users', icon: 'badge', label: 'Usuários' }] : []),
     { path: '/reports', icon: 'bar_chart', label: 'Relatórios' },
     { path: '/settings', icon: 'settings', label: 'Configurações' },
   ];
