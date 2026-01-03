@@ -49,14 +49,14 @@ const Sidebar: React.FC = () => {
               key={item.path}
               to={item.path}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 border-l-4 ${isActive
-                ? 'bg-emerald-600/10 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-bold border-emerald-600 dark:border-emerald-500/20 ring-1 ring-emerald-600/15 dark:ring-emerald-500/20'
-                : 'border-transparent text-slate-800 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-emerald-700 dark:hover:text-white'
+                ? 'bg-emerald-600/10 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-200 font-black border-emerald-600 dark:border-emerald-500 ring-1 ring-emerald-600/10 dark:ring-emerald-500/20 shadow-sm shadow-emerald-500/5'
+                : 'border-transparent text-slate-700 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-emerald-700 dark:hover:text-white group'
                 }`}
             >
-              <span className={`material-symbols-outlined ${isActive ? 'filled text-emerald-800 dark:text-emerald-200' : 'text-slate-600 dark:text-white/50 group-hover:text-emerald-700 dark:group-hover:text-white'}`}>
+              <span className={`material-symbols-outlined ${isActive ? 'filled text-emerald-700 dark:text-emerald-200' : 'text-slate-500 dark:text-white/40 group-hover:text-emerald-600 dark:group-hover:text-white'}`}>
                 {item.icon}
               </span>
-              <span className="text-sm">{item.label}</span>
+              <span className="text-sm font-bold tracking-tight">{item.label}</span>
             </Link>
           );
         })}
@@ -68,8 +68,8 @@ const Sidebar: React.FC = () => {
           <button
             onClick={() => window.location.hash = '#/'}
             className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${!location.pathname.startsWith('/kiosk')
-              ? 'bg-black text-white shadow-lg shadow-gray-200'
-              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+              ? 'bg-[var(--text-primary)] text-[var(--bg-secondary)] shadow-lg shadow-black/10'
+              : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:bg-[var(--border-primary)]'
               }`}
           >
             Web Admin
@@ -77,8 +77,8 @@ const Sidebar: React.FC = () => {
           <button
             onClick={() => window.location.hash = '#/kiosk/login'}
             className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${location.pathname.startsWith('/kiosk')
-              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100'
-              : 'bg-gray-100 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600'
+              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/10'
+              : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/20'
               }`}
           >
             Kiosk
@@ -86,19 +86,19 @@ const Sidebar: React.FC = () => {
         </div>
 
         <div className="pt-4 border-t border-[var(--border-primary)]">
-          <div className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/10">
+          <div className="flex items-center gap-3 p-2 bg-[var(--bg-primary)] dark:bg-white/5 rounded-2xl border border-[var(--border-primary)]">
             <img
               src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=10b981&color=fff&bold=true`}
               className="size-10 rounded-full border-2 border-[var(--bg-secondary)] shadow-sm"
               alt="User"
             />
             <div className="min-w-0">
-              <p className="text-xs font-bold truncate text-slate-900 dark:text-white/85">{user.name}</p>
-              <p className="text-[10px] text-slate-600 dark:text-white/50 truncate uppercase tracking-tighter">{user.role}</p>
+              <p className="text-xs font-black truncate text-[var(--text-primary)] leading-tight">{user.name}</p>
+              <p className="text-[10px] text-[var(--text-secondary)] truncate uppercase tracking-tighter font-bold">{user.role}</p>
             </div>
             <button
               onClick={handleLogout}
-              className="ml-auto flex size-8 items-center justify-center text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-all"
+              className="ml-auto flex size-9 items-center justify-center text-[var(--text-secondary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all border border-transparent hover:border-red-100 dark:hover:border-red-900/50"
               title="Sair"
             >
               <span className="material-symbols-outlined text-lg">logout</span>

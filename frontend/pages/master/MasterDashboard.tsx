@@ -114,49 +114,49 @@ const MasterDashboard: React.FC = () => {
         <MasterLayout>
             <main className="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
                 <header className="mb-8">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Visão Geral</h1>
-                    <p className="text-slate-500">Acompanhe métricas em tempo real</p>
+                    <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">Visão Geral</h1>
+                    <p className="text-[var(--text-secondary)]">Acompanhe métricas em tempo real</p>
                 </header>
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Empresas Ativas</p>
-                        <p className="text-3xl font-black text-emerald-600">{data?.totals?.companies_active || 0}</p>
+                    <div className="bg-[var(--bg-secondary)] p-6 rounded-2xl border border-[var(--border-primary)] shadow-soft">
+                        <p className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest mb-1">Empresas Ativas</p>
+                        <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{data?.totals?.companies_active || 0}</p>
                     </div>
-                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">MRR Mensal</p>
-                        <p className="text-3xl font-black text-blue-600">{formatCurrency(data?.totals?.mrr || 0)}</p>
+                    <div className="bg-[var(--bg-secondary)] p-6 rounded-2xl border border-[var(--border-primary)] shadow-soft">
+                        <p className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest mb-1">MRR Mensal</p>
+                        <p className="text-3xl font-black text-blue-600 dark:text-blue-400">{formatCurrency(data?.totals?.mrr || 0)}</p>
                     </div>
-                     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Trial / Suspensas</p>
+                     <div className="bg-[var(--bg-secondary)] p-6 rounded-2xl border border-[var(--border-primary)] shadow-soft">
+                        <p className="text-xs font-black text-[var(--text-secondary)] uppercase tracking-widest mb-1">Trial / Suspensas</p>
                         <div className="flex gap-4">
                             <div>
-                                <span className="text-2xl font-black text-slate-900">{data?.totals?.companies_trial || 0}</span>
-                                <span className="text-xs text-slate-500 ml-1">Trial</span>
+                                <span className="text-2xl font-black text-[var(--text-primary)]">{data?.totals?.companies_trial || 0}</span>
+                                <span className="text-xs text-[var(--text-secondary)] ml-1">Trial</span>
                             </div>
-                            <div className="w-px bg-slate-200"></div>
+                            <div className="w-px bg-[var(--border-primary)]"></div>
                             <div>
-                                <span className="text-2xl font-black text-red-600">{data?.totals?.companies_suspended || 0}</span>
-                                <span className="text-xs text-slate-500 ml-1">Susp.</span>
+                                <span className="text-2xl font-black text-red-600 dark:text-red-400">{data?.totals?.companies_suspended || 0}</span>
+                                <span className="text-xs text-[var(--text-secondary)] ml-1">Susp.</span>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Alertas</p>
+                    <div className="bg-[var(--bg-secondary)] p-6 rounded-2xl border border-[var(--border-primary)] shadow-soft">
+                        <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1">Alertas</p>
                         <div className="flex gap-2">
                              {(data?.alerts?.over_limit_count || 0) > 0 && (
-                                <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">
+                                <span className="bg-red-500/10 text-red-700 dark:text-red-400 px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest">
                                     {data?.alerts?.over_limit_count} Over Limit
                                 </span>
                              )}
                              {(data?.alerts?.no_plan_count || 0) > 0 && (
-                                <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-bold">
+                                <span className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest">
                                     {data?.alerts?.no_plan_count} Sem Plano
                                 </span>
                              )}
                              {(data?.alerts?.over_limit_count || 0) === 0 && (data?.alerts?.no_plan_count || 0) === 0 && (
-                                 <span className="text-emerald-600 text-sm font-bold flex items-center gap-1">
+                                 <span className="text-emerald-600 dark:text-emerald-400 text-sm font-black flex items-center gap-1">
                                      <span className="material-symbols-outlined text-sm">check_circle</span> Tudo OK
                                  </span>
                              )}
@@ -165,19 +165,19 @@ const MasterDashboard: React.FC = () => {
                 </div>
 
                 {/* Filters & Table */}
-                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-slate-200 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50">
-                        <h2 className="text-lg font-bold text-slate-800">Todas as Empresas</h2>
+                <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl shadow-soft overflow-hidden">
+                    <div className="p-6 border-b border-[var(--border-primary)] flex flex-col sm:flex-row gap-4 justify-between items-center bg-[var(--bg-primary)]/50">
+                        <h2 className="text-lg font-black text-[var(--text-primary)]">Todas as Empresas</h2>
                         <div className="flex gap-3 w-full sm:w-auto">
                             <input 
                                 type="text" 
                                 placeholder="Buscar empresa..." 
-                                className="px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 w-full sm:w-64"
+                                className="px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl text-sm focus:outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 w-full sm:w-64 text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
                                 value={filter}
                                 onChange={(e) => setFilter(e.target.value)}
                             />
                             <select 
-                                className="px-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                                className="px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl text-sm focus:outline-none focus:ring-2 ring-blue-500/20 focus:border-blue-500 text-[var(--text-primary)]"
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
@@ -191,8 +191,8 @@ const MasterDashboard: React.FC = () => {
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
-                            <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                <tr>
+                            <thead className="bg-[var(--bg-primary)] text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
+                                <tr className="border-b border-[var(--border-primary)]">
                                     <th className="px-6 py-4">Empresa</th>
                                     <th className="px-6 py-4">Status</th>
                                     <th className="px-6 py-4">Plano</th>
@@ -201,42 +201,42 @@ const MasterDashboard: React.FC = () => {
                                     <th className="px-6 py-4 text-right">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 text-sm">
+                            <tbody className="divide-y divide-[var(--border-primary)] text-sm">
                                 {filteredCompanies.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                                        <td colSpan={6} className="px-6 py-12 text-center text-[var(--text-secondary)]">
                                             Nenhuma empresa encontrada.
                                         </td>
                                     </tr>
                                 ) : (
                                     filteredCompanies.map((comp) => (
-                                        <tr key={comp.id} className="hover:bg-slate-50 transition-colors group">
+                                        <tr key={comp.id} className="hover:bg-[var(--bg-primary)]/50 transition-colors group">
                                             <td className="px-6 py-4">
-                                                <div className="font-bold text-slate-900">{comp.name}</div>
-                                                <div className="text-xs text-slate-400 font-mono">{comp.id.split('-')[0]}...</div>
+                                                <div className="font-bold text-[var(--text-primary)]">{comp.name}</div>
+                                                <div className="text-xs text-[var(--text-secondary)] font-mono">{comp.id.split('-')[0]}...</div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${
-                                                    comp.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                                                    comp.status === 'suspended' ? 'bg-red-100 text-red-700' :
-                                                    'bg-yellow-100 text-yellow-700'
+                                                <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${
+                                                    comp.status === 'active' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+                                                    comp.status === 'suspended' ? 'bg-red-500/10 text-red-600 dark:text-red-400' :
+                                                    'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
                                                 }`}>
                                                     {comp.status}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 {comp.plan ? (
-                                                    <span className="font-medium text-blue-600">{comp.plan.name}</span>
+                                                    <span className="font-bold text-blue-600 dark:text-blue-400">{comp.plan.name}</span>
                                                 ) : (
-                                                    <span className="text-slate-400 italic">Sem plano</span>
+                                                    <span className="text-[var(--text-secondary)] italic">Sem plano</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 <div className="flex flex-col items-center">
-                                                    <span className={`font-bold ${comp.employees_used > comp.employees_limit ? 'text-red-600' : 'text-slate-700'}`}>
-                                                        {comp.employees_used} <span className="text-slate-400 font-normal">/ {comp.employees_limit}</span>
+                                                    <span className={`font-black ${comp.employees_used > comp.employees_limit ? 'text-red-600' : 'text-[var(--text-primary)]'}`}>
+                                                        {comp.employees_used} <span className="text-[var(--text-secondary)] font-normal">/ {comp.employees_limit}</span>
                                                     </span>
-                                                    <div className="w-16 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                                                    <div className="w-16 h-1.5 bg-[var(--border-primary)] rounded-full mt-1 overflow-hidden">
                                                         <div 
                                                             className={`h-full rounded-full ${comp.employees_used > comp.employees_limit ? 'bg-red-500' : 'bg-emerald-500'}`}
                                                             style={{ width: `${Math.min((comp.employees_used/comp.employees_limit)*100, 100) || 0}%` }}
@@ -246,10 +246,10 @@ const MasterDashboard: React.FC = () => {
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 <div className="flex flex-col items-center">
-                                                    <span className={`font-bold ${comp.plates_used > comp.plates_limit ? 'text-red-600' : 'text-slate-700'}`}>
-                                                        {comp.plates_used} <span className="text-slate-400 font-normal">/ {comp.plates_limit}</span>
+                                                    <span className={`font-black ${comp.plates_used > comp.plates_limit ? 'text-red-600' : 'text-[var(--text-primary)]'}`}>
+                                                        {comp.plates_used} <span className="text-[var(--text-secondary)] font-normal">/ {comp.plates_limit}</span>
                                                     </span>
-                                                     <div className="w-16 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                                                     <div className="w-16 h-1.5 bg-[var(--border-primary)] rounded-full mt-1 overflow-hidden">
                                                         <div 
                                                             className={`h-full rounded-full ${comp.plates_used > comp.plates_limit ? 'bg-red-500' : 'bg-emerald-500'}`}
                                                             style={{ width: `${Math.min((comp.plates_used/comp.plates_limit)*100, 100) || 0}%` }}
@@ -258,24 +258,24 @@ const MasterDashboard: React.FC = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-center justify-end gap-2 outline-none">
                                                     <button 
                                                         onClick={() => navigate(`/alfabiz/companies/${comp.id}/edit`)}
-                                                        className="size-8 rounded flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                                                        className="size-9 rounded-xl flex items-center justify-center bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 transition-all border border-blue-100 dark:border-blue-800 focus:ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 outline-none"
                                                         title="Editar"
                                                     >
-                                                        <span className="material-symbols-outlined text-sm">edit</span>
+                                                        <span className="material-symbols-outlined text-lg">edit</span>
                                                     </button>
                                                     <button 
                                                         onClick={() => handleToggleStatus(comp)}
-                                                        className={`size-8 rounded flex items-center justify-center transition-colors ${
+                                                        className={`size-9 rounded-xl flex items-center justify-center transition-all border focus:ring-2 ring-offset-2 dark:ring-offset-slate-900 outline-none ${
                                                             comp.status === 'suspended' 
-                                                            ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' 
-                                                            : 'bg-red-50 text-red-600 hover:bg-red-100'
+                                                            ? 'bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white border-emerald-100 dark:border-emerald-800 ring-emerald-500' 
+                                                            : 'bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white border-red-100 dark:border-red-800 ring-red-500'
                                                         }`}
                                                         title={comp.status === 'suspended' ? 'Reativar' : 'Suspender'}
                                                     >
-                                                        <span className="material-symbols-outlined text-sm">
+                                                        <span className="material-symbols-outlined text-lg">
                                                             {comp.status === 'suspended' ? 'play_arrow' : 'pause'}
                                                         </span>
                                                     </button>

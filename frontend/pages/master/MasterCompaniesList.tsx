@@ -46,26 +46,26 @@ const MasterCompaniesList: React.FC = () => {
         <MasterLayout>
 
             {/* Content */}
-            <main className="max-w-7xl mx-auto p-8">
+            <main className="max-w-7xl mx-auto p-8 animate-in fade-in duration-500">
                 <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-2xl font-bold text-slate-800">Empresas</h2>
+                    <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Empresas</h2>
                     <Link 
                         to="/alfabiz/companies/new"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-xs transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95"
                     >
                         <span>+</span> Nova Empresa
                     </Link>
                 </div>
 
                 {error && (
-                    <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 border border-red-100">
+                    <div className="bg-red-500/10 text-red-600 dark:text-red-400 p-4 rounded-xl mb-6 border border-red-500/20 font-bold">
                         {error}
                     </div>
                 )}
 
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="bg-[var(--bg-secondary)] rounded-2xl shadow-soft border border-[var(--border-primary)] overflow-hidden">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium uppercase tracking-wider text-xs">
+                        <thead className="bg-[var(--bg-primary)] border-b border-[var(--border-primary)] text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
                             <tr>
                                 <th className="px-6 py-4">Empresa</th>
                                 <th className="px-6 py-4">Status</th>
@@ -75,51 +75,52 @@ const MasterCompaniesList: React.FC = () => {
                                 <th className="px-6 py-4 text-right">Ações</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-[var(--border-primary)]">
                             {companies.map((company) => (
-                                <tr key={company.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-slate-900">
+                                <tr key={company.id} className="hover:bg-[var(--bg-primary)]/50 transition-colors group">
+                                    <td className="px-6 py-4 font-black text-[var(--text-primary)]">
                                         {company.name}
-                                        <div className="text-[10px] text-slate-400 font-mono mt-1">{company.id}</div>
+                                        <div className="text-[10px] text-[var(--text-secondary)] font-mono mt-0.5 uppercase tracking-tighter">{company.id}</div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                                        <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${
                                             company.status === 'active' 
-                                                ? 'bg-emerald-100 text-emerald-700' 
-                                                : 'bg-red-100 text-red-700'
+                                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                                                : 'bg-red-500/10 text-red-600 dark:text-red-400'
                                         }`}>
                                             {company.status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded border text-xs font-semibold ${
+                                        <span className={`px-2 py-1 rounded border text-[10px] font-black uppercase tracking-widest ${
                                             company.plan === 'pro' || company.plan === 'enterprise'
-                                                ? 'bg-purple-50 text-purple-700 border-purple-100'
-                                                : 'bg-slate-100 text-slate-600 border-slate-200'
+                                                ? 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200/50'
+                                                : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-200/50'
                                         }`}>
                                             {company.plan}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-center text-slate-600 font-mono">
+                                    <td className="px-6 py-4 text-center text-[var(--text-primary)] font-black uppercase tracking-widest text-xs">
                                         {company.max_employees}
                                     </td>
-                                    <td className="px-6 py-4 text-center text-slate-600 font-mono">
+                                    <td className="px-6 py-4 text-center text-[var(--text-primary)] font-black uppercase tracking-widest text-xs">
                                         {company.max_plates}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <Link 
-                                            to={`/alfabiz/companies/${company.id}/edit`}
-                                            className="text-blue-600 hover:text-blue-900 font-medium text-xs uppercase"
+                                        <button 
+                                            onClick={() => navigate(`/alfabiz/companies/${company.id}/edit`)}
+                                            className="inline-flex size-9 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 transition-all border border-blue-100 dark:border-blue-800 focus:ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 outline-none"
+                                            title="Editar"
                                         >
-                                            Editar
-                                        </Link>
+                                            <span className="material-symbols-outlined text-lg">edit</span>
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
 
                             {companies.length === 0 && !loading && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-[var(--text-secondary)] uppercase tracking-widest text-xs font-bold">
                                         Nenhuma empresa encontrada.
                                     </td>
                                 </tr>
