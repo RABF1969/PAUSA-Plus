@@ -86,13 +86,43 @@ const TabletScan: React.FC = () => {
     }
   }, [confirmation, error]);
 
+  // 4. Fallback de Segurança (Watchdog)
+  useEffect(() => {
+    let t: NodeJS.Timeout;
+    if (loading) {
+      t = setTimeout(() => {
+        if (isProcessingRef.current) {
+          if (import.meta.env.DEV) console.warn('[KIOSK WATCHDOG] Stalled state detected. Resetting.');
+          setError('Tempo excedido. Tente novamente.');
+          setLoading(false);
+          isProcessingRef.current = false;
+        }
+      }, 5000);
+    }
+    return () => clearTimeout(t);
+  }, [loading]);
+
   // =========================
   // Toggle logic
   // =========================
   const handleToggleAction = async (badge: string) => {
+    // 5. Dev Log (Audit)
+    if (import.meta.env.DEV) {
+      console.log('[KIOSK STATE] Request:', {
+        badge_code: badge,
+        selectedBreakType,
+        loading,
+        processing: isProcessingRef.current
+      });
+    }
+
     if (isProcessingRef.current) return;
+
+    // 2. Corrigir Early-Returns
     if (!selectedBreakType) {
       setError('Selecione um tipo de pausa');
+      setLoading(false);
+      isProcessingRef.current = false;
       return;
     }
 
@@ -119,13 +149,19 @@ const TabletScan: React.FC = () => {
         });
       }
     } catch (err: any) {
+      // 3. Garantir captura de erro
       const { message } = getApiErrorMessage(err);
       setError(message);
       logErrorInDev(err, 'TabletScan - Start Break');
     } finally {
+      // 1. Garantir Finally executa sempre
       setLoading(false);
       isProcessingRef.current = false;
       setTestBadgeCode('');
+      
+      if (import.meta.env.DEV) {
+        console.log('[KIOSK STATE] Finished. Reset complete.');
+      }
     }
   };
 
